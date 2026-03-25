@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI/LLM 实战课程</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 0 0 24px 24px;
+        }
+        
+        header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        header p { opacity: 0.9; font-size: 0.95rem; }
+        
+        .course-list { margin-top: 30px; }
+        
+        .course-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        
+        .course-card.active { border-left: 4px solid var(--secondary); }
+        
+        .course-number {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .course-title { font-size: 1.1rem; font-weight: 600; }
+        
+        .course-desc {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        
+        .badge-featured { background: rgba(245, 158, 11, 0.15); color: var(--accent); }
+        .badge-basic { background: rgba(79, 70, 229, 0.15); color: var(--primary); }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🚀 AI/LLM 实战课程</h1>
+            <p>面向有Vue前端经验的开发者 · 10个实战项目</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="course-list">
+            <a href="project1.html" class="course-card active">
+                <div>
+                    <span class="course-number">1</span>
+                    <span class="course-title">意图识别技术与实战</span>
+                    <span class="badge badge-featured">⭐ 重点</span>
+                </div>
+                <div class="course-desc">理解NLP核心，实现用户意图分类，是智能客服的基础</div>
+            </a>
+            
+            <a href="project2.html" class="course-card">
+                <div>
+                    <span class="course-number">2</span>
+                    <span class="course-title">文本匹配与智能问答</span>
+                    <span class="badge badge-basic">基础</span>
+                </div>
+                <div class="course-desc">实现FAQ问答系统，理解向量检索原理</div>
+            </a>
+            
+            <a href="project3.html" class="course-card">
+                <div>
+                    <span class="course-number">3</span>
+                    <span class="course-title">多模态内容理解</span>
+                    <span class="badge badge-basic">基础</span>
+                </div>
+                <div class="course-desc">让AI理解图片，实现以图搜图功能</div>
+            </a>
+            
+            <a href="project4.html" class="course-card">
+                <div>
+                    <span class="course-number">4</span>
+                    <span class="course-title">RAG智能客服</span>
+                    <span class="badge badge-featured">⭐ 重点</span>
+                </div>
+                <div class="course-desc">搭建企业知识库问答系统，解决大模型幻觉</div>
+            </a>
+            
+            <a href="project5.html" class="course-card">
+                <div>
+                    <span class="course-number">5</span>
+                    <span class="course-title">PDF公式识别与计算</span>
+                </div>
+                <div class="course-desc">从PDF中提取数学公式并进行计算</div>
+            </a>
+            
+            <a href="project6.html" class="course-card">
+                <div>
+                    <span class="course-number">6</span>
+                    <span class="course-title">Agent工作流</span>
+                </div>
+                <div class="course-desc">让AI使用工具，完成复杂任务</div>
+            </a>
+            
+            <a href="project7.html" class="course-card">
+                <div>
+                    <span class="course-number">7</span>
+                    <span class="course-title">Dify低代码开发</span>
+                </div>
+                <div class="course-desc">可视化快速构建AI应用</div>
+            </a>
+            
+            <a href="project8.html" class="course-card">
+                <div>
+                    <span class="course-number">8</span>
+                    <span class="course-title">ChatBI智能分析</span>
+                </div>
+                <div class="course-desc">自然语言查询数据库，生成可视化图表</div>
+            </a>
+            
+            <a href="project9.html" class="course-card">
+                <div>
+                    <span class="course-number">9</span>
+                    <span class="course-title">知识图谱</span>
+                </div>
+                <div class="course-desc">从文本中提取结构化知识</div>
+            </a>
+            
+            <a href="project10.html" class="course-card">
+                <div>
+                    <span class="course-number">10</span>
+                    <span class="course-title">金融研报生成</span>
+                </div>
+                <div class="course-desc">自动生成金融研究报告</div>
+            </a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>🎓 AI/LLM 实战课程 · 2026-03-17</p>
+    </footer>
+</body>
+</html>

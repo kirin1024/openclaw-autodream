@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目一：代码实战 - AI/LLM 实战课程</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+            --code-bg: #1E293B;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            background: var(--card-bg);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-btn {
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .back-btn:hover { text-decoration: underline; }
+        
+        .course-tag {
+            background: var(--secondary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .page-title { padding: 30px 0 20px; }
+        
+        .page-title h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .page-title h1 span { color: var(--primary); }
+        
+        .intro { color: var(--text-light); font-size: 0.95rem; }
+        
+        .section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-title .num {
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        
+        .step {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-content { flex: 1; }
+        
+        .step h4 { margin-bottom: 8px; }
+        
+        .code-block {
+            background: var(--code-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        
+        .code-header {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .code-header .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .code-header .dot:nth-child(1) { background: #FF5F56; }
+        .code-header .dot:nth-child(2) { background: #FFBD2E; }
+        .code-header .dot:nth-child(3) { background: #27CA40; }
+        
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            color: #E2E8F0;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        
+        code { font-family: 'SF Mono', Monaco, Consolas, monospace; }
+        
+        .code-comment { color: #6B7280; }
+        .code-keyword { color: #C084FC; }
+        .code-string { color: #34D399; }
+        .code-function { color: #60A5FA; }
+        
+        .tip {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 16px;
+            border-radius: 0 12px 12px 0;
+            margin: 16px 0;
+        }
+        
+        .tip h4 { color: var(--accent); margin-bottom: 8px; font-size: 0.95rem; }
+        
+        .result {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 12px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .success { color: var(--secondary); }
+        
+        .next-btn {
+            display: block;
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+        
+        .next-btn:hover { background: var(--primary-light); }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="project1.html" class="back-btn">← 返回概念</a>
+            <span class="course-tag">代码实战</span>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="page-title">
+            <h1><span>意图识别</span> - 代码实战</h1>
+            <p class="intro">搭建一个可运行的意图识别Demo</p>
+        </div>
+        
+        <!-- 环境准备 -->
+        <div class="section">
+            <h2 class="section-title"><span class="num">1</span> 环境准备</h2>
+            
+            <p style="color: var(--text-light); margin-bottom: 16px;">
+                在开始之前，你需要安装Python环境和相关依赖。
+            </p>
+            
+            <h4>步骤1：安装Python依赖</h4>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span style="margin-left: 10px;">终端</span>
+                </div>
+                <pre><code><span class="code-comment"># 安装transformers和torch</span>
+pip install transformers torch</code></pre>
+            </div>
+            
+            <div class="tip">
+                <h4>💡 提示</h4>
+                <p>如果下载慢，可以换国内源：</p>
+                <code>pip install transformers torch -i https://pypi.tuna.tsinghua.edu.cn/simple</code>
+            </div>
+        </div>
+        
+        <!-- 后端代码 -->
+        <div class="section">
+            <h2 class="section-title"><span class="num">2</span> 后端：意图识别API</h2>
+            
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h4>创建后端文件</h4>
+                    <p style="color: var(--text-light); font-size: 0.9rem;">新建文件 <code>server.py</code></p>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span style="margin-left: 10px;">server.py</span>
+                </div>
+                <pre><code><span class="code-comment"># 导入FastAPI</span>
+<span class="code-keyword">from</span> fastapi <span class="code-keyword">import</span> FastAPI
+<span class="code-keyword">from</span> pydantic <span class="code-keyword">import</span> BaseModel
+<span class="code-keyword">from</span> transformers <span class="code-keyword">import</span> pipeline
+
+<span class="code-comment"># 创建应用</span>
+app = FastAPI(title=<span class="code-string">"意图识别API"</span>)
+
+<span class="code-comment"># 加载模型（首次运行会下载）</span>
+print(<span class="code-string">"正在加载模型..."</span>)
+classifier = pipeline(
+    <span class="code-string">"zero-shot-classification"</span>,
+    model=<span class="code-string">"facebook/bart-large-mnli"</span>
+)
+print(<span class="code-string">"模型加载完成！"</span>)
+
+<span class="code-comment"># 定义请求格式</span>
+<span class="code-keyword">class</span> <span class="code-function">IntentRequest</span>(BaseModel):
+    text: str
+    labels: list[str]
+
+<span class="code-comment"># 定义API接口</span>
+<span class="code-keyword">@app.post</span>(<span class="code-string">"/intent"</span>)
+<span class="code-keyword">def</span> <span class="code-function">predict_intent</span>(request: IntentRequest):
+    result = classifier(
+        request.text,
+        candidate_labels=request.labels
+    )
+    <span class="code-keyword">return</span> {
+        <span class="code-string">"intent"</span>: result[<span class="code-string">"labels"</span>][0],
+        <span class="code-string">"confidence"</span>: result[<span class="code-string">"scores"</span>][0],
+        <span class="code-string">"all_results"</span>: list(zip(result[<span class="code-string">"labels"</span>], result[<span class="code-string">"scores"</span>]))
+    }
+
+<span class="code-comment"># 启动服务</span>
+<span class="code-keyword">if</span> __name__ == <span class="code-string">"__main__"</span>:
+    <span class="code-keyword">import</span> uvicorn
+    uvicorn.run(app, host=<span class="code-string">"0.0.0.0"</span>, port=8000)</code></pre>
+            </div>
+            
+            <div class="step" style="margin-top: 20px;">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>启动服务</h4>
+                </div>
+            </div>
+            
+            <div class="code-block">
+                <pre><code><span class="code-comment"># 终端运行</span>
+python server.py</code></pre>
+            </div>
+            
+            <div class="result">
+                <span class="success">✓</span> 服务已启动：http://localhost:8000<br>
+                <span class="success">✓</span> API文档：http://localhost:8000/docs
+            </div>
+        </div>
+        
+        <!-- 前端代码 -->
+        <div class="section">
+            <h2 class="section-title"><span class="num">3</span> 前端：Vue界面</h2>
+            
+            <p style="color: var(--text-light); margin-bottom: 16px;">
+                用Vue + Element Plus 做一个简单的界面。
+            </p>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span style="margin-left: 10px;">App.vue</span>
+                </div>
+                <pre><code><span class="code-comment">&lt;template&gt;</span>
+  &lt;<span class="code-keyword">div</span> class=<span class="code-string">"container"</span>&gt;
+    &lt;<span class="code-keyword">h2</span>&gt;🤖 意图识别Demo&lt;/<span class="code-keyword">h2</span>&gt;
+    
+    &lt;<span class="code-keyword">el-input</span>
+      v-model=<span class="code-string">"userText"</span>
+      placeholder=<span class="code-string">"请输入要识别的话术"</span>
+      type=<span class="code-string">"textarea"</span>
+      :rows=<span class="code-string">"3"</span>
+    &gt;&lt;/<span class="code-keyword">el-input</span>&gt;
+    
+    &lt;<span class="code-keyword">el-button</span> 
+      type=<span class="code-string">"primary"</span> 
+      @click=<span class="code-string">"recognizeIntent"</span>
+      :loading=<span class="code-string">"loading"</span>
+    &gt;
+      开始识别
+    &lt;/<span class="code-keyword">el-button</span>&gt;
+    
+    &lt;<span class="code-keyword">div</span> v-if=<span class="code-string">"result"</span> class=<span class="code-string">"result-box"</span>&gt;
+      &lt;<span class="code-keyword">h3</span>&gt;识别结果：&lt;/<span class="code-keyword">h3</span>&gt;
+      &lt;<span class="code-keyword">p</span>&gt;意图：{{ result.intent }}&lt;/<span class="code-keyword">p</span>&gt;
+      &lt;<span class="code-keyword">p</span>&gt;置信度：{{ (result.confidence * 100).toFixed(1) }}%&lt;/<span class="code-keyword">p</span>&gt;
+    &lt;/<span class="code-keyword">div</span>&gt;
+  &lt;/<span class="code-keyword">div</span>&gt;
+&lt;/template&gt;</code></pre>
+            </div>
+            
+            <div class="code-block" style="margin-top: 12px;">
+                <pre><code><span class="code-comment">&lt;script setup&gt;</span>
+<span class="code-keyword">import</span> { ref } <span class="code-keyword">from</span> <span class="code-string">'vue'</span>
+
+<span class="code-keyword">const</span> userText = ref(<span class="code-string">''</span>)
+<span class="code-keyword">const</span> loading = ref(<span class="code-keyword">false</span>)
+<span class="code-keyword">const</span> result = ref(<span class="code-keyword">null</span>)
+
+<span class="code-keyword">const</span> labels = [<span class="code-string">'查订单'</span>, <span class="code-string">'退货退款'</span>, <span class="code-string">'投诉'</span>, <span class="code-string">'咨询产品'</span>]
+
+<span class="code-keyword">const</span> recognizeIntent = <span class="code-keyword">async</span> () => {
+  loading.value = <span class="code-keyword">true</span>
+  <span class="code-keyword">try</span> {
+    <span class="code-keyword">const</span> res = <span class="code-keyword">await</span> fetch(<span class="code-string">'http://localhost:8000/intent'</span>, {
+      method: <span class="code-string">'POST'</span>,
+      headers: { <span class="code-string">'Content-Type'</span>: <span class="code-string">'application/json'</span> },
+      body: JSON.stringify({
+        text: userText.value,
+        labels: labels
+      })
+    })
+    result.value = <span class="code-keyword">await</span> res.json()
+  } <span class="code-keyword">catch</span> (e) {
+    console.error(e)
+  }
+  loading.value = <span class="code-keyword">false</span>
+}
+&lt;/script&gt;</code></pre>
+            </div>
+        </div>
+        
+        <!-- 测试 -->
+        <div class="section">
+            <h2 class="section-title"><span class="num">4</span> 测试</h2>
+            
+            <p>用curl测试API：</p>
+            <div class="code-block">
+                <pre><code>curl -X POST http://localhost:8000/intent \
+  -H "Content-Type: application/json" \
+  -d '{"text": "我想查一下订单到哪里了", "labels": ["查订单", "退货退款", "投诉", "咨询产品"]}'</code></pre>
+            </div>
+            
+            <div class="result">
+                <span class="success">返回示例：</span><br>
+                {<br>
+                  &nbsp;&nbsp;"intent": "查订单",<br>
+                  &nbsp;&nbsp;"confidence": 0.92<br>
+                }
+            </div>
+        </div>
+        
+        <!-- 下一步 -->
+        <div class="section">
+            <h2 class="section-title">🎉 恭喜完成！</h2>
+            <p>你已经完成了第一个AI Demo！</p>
+            <a href="project2.html" class="next-btn">下一课：文本匹配与问答 →</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>🎓 AI/LLM 实战课程 · 项目一</p>
+    </footer>
+</body>
+</html>

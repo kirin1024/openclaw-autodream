@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目一：意图识别 - AI/LLM 实战课程</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --secondary: #10B981;
+            --accent: #F59E0B;
+            --bg: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --text: #1E293B;
+            --text-light: #64748B;
+            --border: #E2E8F0;
+            --code-bg: #1E293B;
+            --yellow-bg: #FFFBEB;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+        
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-btn {
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .course-tag {
+            background: var(--primary);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+        }
+        
+        .page-title {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 40px 24px;
+            border-radius: 0 0 24px 24px;
+            margin-bottom: 24px;
+        }
+        
+        .page-title h1 { font-size: 1.6rem; margin-bottom: 8px; }
+        .intro { opacity: 0.9; font-size: 0.95rem; }
+        
+        .section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .section-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title .icon {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .yellow-box {
+            background: var(--yellow-bg);
+            border-left: 3px solid var(--accent);
+            padding: 16px;
+            border-radius: 0 10px 10px 0;
+            margin: 16px 0;
+        }
+        
+        .yellow-box h4 {
+            color: var(--accent);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+        
+        .tech-card {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .tech-card h5 {
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .tech-card p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+        
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .compare-table th {
+            background: var(--bg);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .compare-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        
+        .compare-table tr:last-child td { border-bottom: none; }
+        
+        .step-card {
+            background: var(--yellow-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .step-card h4 {
+            color: var(--accent);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-num {
+            background: var(--accent);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        
+        .step-content { margin-top: 12px; }
+        
+        .step-content p { color: var(--text-light); font-size: 0.9rem; margin-bottom: 12px; }
+        
+        .task-list { list-style: none; }
+        
+        .task-list li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .task-list li:last-child { border-bottom: none; }
+        
+        .task-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+        
+        .code-block {
+            background: var(--code-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        
+        .code-header {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        pre { padding: 14px; overflow-x: auto; color: #E2E8F0; font-size: 0.8rem; }
+        
+        code { font-family: 'SF Mono', Monaco, monospace; }
+        .code-comment { color: #6B7280; }
+        .code-keyword { color: #C084FC; }
+        .code-string { color: #34D399; }
+        
+        .deliverable {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 14px;
+        }
+        
+        .deliverable h5 {
+            color: var(--secondary);
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .deliverable p { font-size: 0.8rem; color: var(--text-light); }
+        
+        .concept {
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.06) 0%, rgba(129, 140, 248, 0.06) 100%);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary);
+            margin: 16px 0;
+            line-height: 1.8;
+        }
+        
+        .next-btn {
+            display: block;
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        
+        .next-btn:hover { background: var(--primary-light); }
+        
+        footer { text-align: center; padding: 30px; color: var(--text-light); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="back-btn">← 返回课程列表</a>
+            <span class="course-tag">项目一</span>
+        </div>
+    </header>
+    
+    <div class="page-title">
+        <div class="container">
+            <h1>意图识别技术与实战</h1>
+            <p class="intro">理解NLP核心概念，实现用户意图分类</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        
+        <!-- 项目背景 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="icon">📋</span>
+                项目背景
+            </h2>
+            <div class="concept">
+                <p>在当今高度智能化的交互系统中，准确理解用户的真实意图是提供个性化、高效服务的基石。无论是<strong>智能客服</strong>、<strong>语音助手</strong>，还是<strong>智能家居控制</strong>，用户通过自然语言表达的需求多种多样，且往往带有歧义。</p>
+                <br>
+                <p><strong>对话意图识别 (Intent Recognition)</strong> 作为自然语言处理 (NLP) 领域的核心任务，旨在<strong>精准地判断用户语句背后的目的</strong>，从而触发相应的业务逻辑或提供恰当的回复。</p>
+            </div>
+        </div>
+        
+        <!-- 核心技术 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="icon">⚙️</span>
+                核心技术
+            </h2>
+            
+            <div class="yellow-box">
+                <h4>🔬 NLP技术发展脉络</h4>
+                
+                <div class="tech-card">
+                    <h5>1. 传统机器学习阶段</h5>
+                    <p>基于规则和统计的方法，如 TF-IDF、SVM（支持向量机）、朴素贝叶斯。优点是可解释性强，缺点是效果有限。</p>
+                </div>
+                
+                <div class="tech-card">
+                    <h5>2. 深度学习阶段</h5>
+                    <p>使用神经网络，如 TextCNN（卷积神经网络）、RNN、LSTM。能够自动学习特征，效果提升明显。</p>
+                </div>
+                
+                <div class="tech-card">
+                    <h5>3. 预训练大模型阶段</h5>
+                    <p>BERT、GPT、Qwen 等预训练模型，通过海量文本学习通用语言表示，在下游任务上微调即可达到最优效果。</p>
+                </div>
+            </div>
+            
+            <div class="yellow-box">
+                <h4>📊 分类模型对比</h4>
+                
+                <table class="compare-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">方法</th>
+                            <th style="width: 40%;">特点</th>
+                            <th style="width: 35%;">适用场景</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>传统方法</strong><br><small>TF-IDF + 朴素贝叶斯</small></td>
+                            <td>高可解释性，低准确率，计算快</td>
+                            <td>简单分类，文本量小</td>
+                        </tr>
+                        <tr>
+                            <td><strong>轻量级模型</strong><br><small>FastText、TextCNN</small></td>
+                            <td>训练快，适合短文本，资源消耗低</td>
+                            <td>大规模文本分类，实时性要求高</td>
+                        </tr>
+                        <tr>
+                            <td><strong>时序模型</strong><br><small>LSTM、GRU</small></td>
+                            <td>捕捉长文本依赖，处理顺序信息</td>
+                            <td>长文本，序列标注任务</td>
+                        </tr>
+                        <tr>
+                            <td><strong>预训练大模型</strong><br><small>BERT、ERNIE、Qwen</small></td>
+                            <td>高精度，上下文理解能力强</td>
+                            <td>复杂意图，多轮对话</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 技术原理 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="icon">🔄</span>
+                技术原理
+            </h2>
+            
+            <h4 style="margin-bottom: 12px;">工作流程</h4>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 20px 0;">
+                <span style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem;">用户输入</span>
+                <span style="color: var(--text-light);">→</span>
+                <span style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem;">文本转向量</span>
+                <span style="color: var(--text-light);">→</span>
+                <span style="background: var(--primary); color: white; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem;">分类器判断</span>
+                <span style="color: var(--text-light);">→</span>
+                <span style="background: var(--secondary); color: white; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem;">意图结果</span>
+            </div>
+            
+            <h4 style="margin: 24px 0 12px;">文本特征提取方法</h4>
+            <table class="compare-table">
+                <thead>
+                    <tr><th>方法</th><th>原理</th><th>特点</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>TF-IDF</td><td>统计词频和逆文档频率</td><td>快、简单、效果好</td></tr>
+                    <tr><td>Word2Vec</td><td>将词映射为向量</td><td>语义相似、维度低</td></tr>
+                    <tr><td>BERT</td><td>基于Transformer的上下文理解</td><td>最准、效果最好</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 项目全流程实战 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="icon">🚀</span>
+                项目全流程实战
+            </h2>
+            
+            <div class="step-card">
+                <h4><span class="step-num">1</span> 数据采集与标注</h4>
+                <div class="step-content">
+                    <p>构建领域特定的意图语料库，这是整个项目的基础。</p>
+                    <ul class="task-list">
+                        <li>收集真实用户 query（从客服日志、搜索记录获取）</li>
+                        <li>定义意图标签体系（如：查订单、退货、投诉、咨询等）</li>
+                        <li>人工标注数据（每条query对应一个意图标签）</li>
+                        <li>数据清洗（去除无效、重复、敏感数据）</li>
+                    </ul>
+                    <div class="code-block">
+                        <div class="code-header">data/labeled_data.jsonl</div>
+                        <pre><code>{"text": "我想查订单", "intent": "order_query"}
+{"text": "我要退货", "intent": "refund"}
+{"text": "产品多少钱", "intent": "price_query"}</code></pre>
+                    </div>
+                    <div class="deliverable">
+                        <h5>📦 交付物</h5>
+                        <p>标注好的JSONL文件，至少100条/意图</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-card">
+                <h4><span class="step-num">2</span> 数据分析</h4>
+                <div class="step-content">
+                    <p>了解数据分布，为后续模型训练做准备。</p>
+                    <ul class="task-list">
+                        <li>统计各类别样本数量（检查是否平衡）</li>
+                        <li>分析文本长度分布（决定最大长度）</li>
+                        <li>统计高频词（了解领域词汇）</li>
+                        <li>构建混淆矩阵（了解易混淆类别）</li>
+                    </ul>
+                    <div class="code-block">
+                        <div class="code-header">analyze.py</div>
+                        <pre><code><span class="code-keyword">import</span> pandas <span class="code-keyword">as</span> pd
+
+df = pd.read_jsonl(<span class="code-string">"data.jsonl"</span>)
+<span class="code-comment"># 类别分布</span>
+print(df[<span class="code-string">"intent"</span>].value_counts())
+<span class="code-comment"># 文本长度</span>
+df[<span class="code-string">"len"</span>] = df[<span class="code-string">"text"</span>].str.len()
+print(df[<span class="code-string">"len"</span>].describe())</code></pre>
+                    </div>
+                    <div class="deliverable">
+                        <h5>📦 交付物</h5>
+                        <p>数据分析报告：分布图、结论</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-card">
+                <h4><span class="step-num">3</span> 模型训练与调优</h4>
+                <div class="step-content">
+                    <p>选择合适的模型，进行训练和调优。</p>
+                    <ul class="task-list">
+                        <li>数据划分（训练/验证/测试集 8:1:1）</li>
+                        <li>选择预训练模型（BERT/ERNIE等）</li>
+                        <li>模型微调（Fine-tuning）</li>
+                        <li>超参数调优（学习率、批次大小）</li>
+                        <li>模型评估（准确率、召回率、F1值）</li>
+                    </ul>
+                    <div class="code-block">
+                        <div class="code-header">train.py</div>
+                        <pre><code><span class="code-keyword">from</span> transformers <span class="code-keyword">import</span> BertForSequenceClassification
+
+model = BertForSequenceClassification.from_pretrained(
+    <span class="code-string">"bert-base-chinese"</span>,
+    num_labels=<span class="code-string">4</span>
+)
+<span class="code-comment"># 训练...</span>
+trainer.train()
+<span class="code-comment"># 评估...</span>
+trainer.evaluate()</code></pre>
+                    </div>
+                    <div class="deliverable">
+                        <h5>📦 交付物</h5>
+                        <p>训练好的模型 + 评估报告</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-card">
+                <h4><span class="step-num">4</span> 部署落地</h4>
+                <div class="step-content">
+                    <p>把模型部署成API，让前端可以调用。</p>
+                    <ul class="task-list">
+                        <li>模型导出（ONNX格式优化推理）</li>
+                        <li>搭建FastAPI服务</li>
+                        <li>编写API接口（POST /predict）</li>
+                        <li>部署到服务器（Docker容器化）</li>
+                        <li>压力测试（QPS、响应时间）</li>
+                    </ul>
+                    <div class="code-block">
+                        <div class="code-header">deploy.py</div>
+                        <pre><code><span class="code-keyword">from</span> fastapi <span class="code-keyword">import</span> FastAPI
+
+app = FastAPI()
+
+<span class="code-keyword">@app.post</span>(<span class="code-string">"/predict"</span>)
+<span class="code-keyword">def</span> <span class="code-function">predict</span>(text: str):
+    <span class="code-comment"># 模型推理</span>
+    result = model.predict(text)
+    <span class="code-keyword">return</span> {<span class="code-string">"intent"</span>: result}</code></pre>
+                    </div>
+                    <div class="deliverable">
+                        <h5>📦 交付物</h5>
+                        <p>可访问的API服务 + 文档</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 快速实战 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="icon">⚡</span>
+                快速实战：零样本分类
+            </h2>
+            <div class="concept">
+                <p><strong>不想从头标注数据？</strong>可以用零样本分类，直接用预训练模型！</p>
+            </div>
+            <div class="code-block">
+                <div class="code-header">zero_shot.py</div>
+                <pre><code><span class="code-keyword">from</span> transformers <span class="code-keyword">import</span> pipeline
+
+classifier = pipeline(
+    <span class="code-string">"zero-shot-classification"</span>,
+    model=<span class="code-string">"facebook/bart-large-mnli"</span>
+)
+
+result = classifier(
+    <span class="code-string">"我想查订单"</span>,
+    candidate_labels=[<span class="code-string">"查订单"</span>, <span class="code-string">"退货"</span>, <span class="code-string">"投诉"</span>]
+)
+<span class="code-function">print</span>(result)</code></pre>
+            </div>
+        </div>
+        
+        <!-- 总结 -->
+        <div class="section">
+            <h2 class="section-title">
+                <span class="icon">✅</span>
+                本节小结
+            </h2>
+            <p>项目一完成两条路径：</p>
+            <ul style="margin: 12px 0 20px 20px;">
+                <li><strong>完整路径</strong>：数据标注 → 分析 → 训练 → 部署</li>
+                <li><strong>快速路径</strong>：零样本直接使用</li>
+            </ul>
+            <a href="project1-code.html" class="next-btn">下一步：搭建代码环境 →</a>
+        </div>
+        
+    </div>
+    
+    <footer>
+        <p>🎓 AI/LLM 实战课程 · 项目一</p>
+    </footer>
+</body>
+</html>

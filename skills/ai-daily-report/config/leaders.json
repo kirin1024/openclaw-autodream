@@ -1,0 +1,205 @@
+[
+  {
+    "name": "Ashish Vaswani",
+    "platform_id": "@ashish_vaswani",
+    "keywords": ["Ashish Vaswani", "Essential AI"],
+    "domain": "Transformer/Attention",
+    "tier": 1
+  },
+  {
+    "name": "Noam Shazeer",
+    "platform_id": "@NoamShazeer",
+    "keywords": ["Noam Shazeer", "Character.AI"],
+    "domain": "大模型架构",
+    "tier": 1
+  },
+  {
+    "name": "Alec Radford",
+    "platform_id": "@AlecRadford",
+    "keywords": ["Alec Radford", "OpenAI GPT"],
+    "domain": "GPT系列核心",
+    "tier": 1
+  },
+  {
+    "name": "John Schulman",
+    "platform_id": "@john_schulman",
+    "keywords": ["John Schulman", "RLHF", "ChatGPT"],
+    "domain": "强化学习/RLHF",
+    "tier": 1
+  },
+  {
+    "name": "Percy Liang",
+    "platform_id": "@percyliang",
+    "keywords": ["Percy Liang", "Stanford HAI", "RLHF"],
+    "domain": "LLM对齐/RLHF/SFT",
+    "tier": 1
+  },
+  {
+    "name": "Ilya Sutskever",
+    "platform_id": "@ilyasut",
+    "keywords": ["Ilya Sutskever", "SSI", "AI safety", "AGI"],
+    "domain": "AI安全/AGI",
+    "tier": 2
+  },
+  {
+    "name": "Andrej Karpathy",
+    "platform_id": "@karpathy",
+    "keywords": ["Andrej Karpathy", "Eureka Labs", "LLM", "AI教育"],
+    "domain": "AI教育/LLM",
+    "tier": 2
+  },
+  {
+    "name": "Durk Kingma",
+    "platform_id": "@dpkingma",
+    "keywords": ["Durk Kingma", "VAE", "OpenAI"],
+    "domain": "VAE/生成模型",
+    "tier": 2
+  },
+  {
+    "name": "Lilian Weng",
+    "platform_id": "@lilianweng",
+    "keywords": ["Lilian Weng", "OpenAI", "AI safety"],
+    "domain": "AI安全研究",
+    "tier": 2
+  },
+  {
+    "name": "Jan Leike",
+    "platform_id": "@janleike",
+    "keywords": ["Jan Leike", "Anthropic", "AI alignment"],
+    "domain": "对齐研究",
+    "tier": 2
+  },
+  {
+    "name": "Riley Goodside",
+    "platform_id": "@goodside",
+    "keywords": ["Riley Goodside", "prompt engineering", "LLM"],
+    "domain": "Prompt工程/LLM",
+    "tier": 2
+  },
+  {
+    "name": "Yi Wu",
+    "platform_id": "@YiWu",
+    "keywords": ["Yi Wu", "OpenAI", "agent", "RL"],
+    "domain": "Agent/RL",
+    "tier": 2
+  },
+  {
+    "name": "Jared Kaplan",
+    "platform_id": "@jaredkaplan",
+    "keywords": ["Jared Kaplan", "Anthropic", "Claude"],
+    "domain": "Claude/训练",
+    "tier": 2
+  },
+  {
+    "name": "Amanda Askell",
+    "platform_id": "@AmandaAskell",
+    "keywords": ["Amanda Askell", "Anthropic", "AI alignment"],
+    "domain": "对齐/HHH原则",
+    "tier": 2
+  },
+  {
+    "name": "Dario Amodei",
+    "platform_id": "@darioamodei",
+    "keywords": ["Dario Amodei", "Anthropic CEO", "Claude", "AI safety"],
+    "domain": "AI安全/行业",
+    "tier": 2
+  },
+  {
+    "name": "Jeff Dean",
+    "platform_id": "@JeffDean",
+    "keywords": ["Jeff Dean", "Google AI", "TPU"],
+    "domain": "AI基础设施/TPU",
+    "tier": 2
+  },
+  {
+    "name": "Oriol Vinyals",
+    "platform_id": "@OriolVinyals",
+    "keywords": ["Oriol Vinyals", "DeepMind", "AlphaStar"],
+    "domain": "序列模型/AlphaStar",
+    "tier": 2
+  },
+  {
+    "name": "Koray Kavukcuoglu",
+    "platform_id": "@koraykav",
+    "keywords": ["Koray Kavukcuoglu", "DeepMind"],
+    "domain": "研究VP",
+    "tier": 2
+  },
+  {
+    "name": "Demis Hassabis",
+    "platform_id": "@demishassabis",
+    "keywords": ["Demis Hassabis", "DeepMind CEO", "AlphaFold", "AGI"],
+    "domain": "AlphaFold/AGI",
+    "tier": 2
+  },
+  {
+    "name": "Yann LeCun",
+    "platform_id": "@ylecun",
+    "keywords": ["Yann LeCun", "Meta AI", "deep learning"],
+    "domain": "深度学习/图灵奖",
+    "tier": 3
+  },
+  {
+    "name": "Thomas Silex",
+    "platform_id": "@Thomwolf",
+    "keywords": ["Thomas Silex", "Meta AI", "LLaMA"],
+    "domain": "LLaMA开源",
+    "tier": 3
+  },
+  {
+    "name": "Soumith Chintala",
+    "platform_id": "@soumikiththunder",
+    "keywords": ["Soumith Chintala", "Meta", "PyTorch", "FAIR"],
+    "domain": "PyTorch/FAIR",
+    "tier": 3
+  },
+  {
+    "name": "Jim Fan",
+    "platform_id": "@DrJimFan",
+    "keywords": ["Jim Fan", "NVIDIA AI", "agent", "robotics"],
+    "domain": "AI Agent/机器人",
+    "tier": 3
+  },
+  {
+    "name": "Simon Willison",
+    "platform_id": "@simonw",
+    "keywords": ["Simon Willison", "AI tools", "Python", "LLM"],
+    "domain": "AI工具/代码实战",
+    "tier": 3
+  },
+  {
+    "name": "Chip Huyen",
+    "platform_id": "@chipro",
+    "keywords": ["Chip Huyen", "MLOps", "AI engineering"],
+    "domain": "MLOps/AI工程",
+    "tier": 3
+  },
+  {
+    "name": "Samuel Albanie",
+    "platform_id": "@SamuelAlbanie",
+    "keywords": ["Samuel Albanie", "computer vision", "multimodal AI"],
+    "domain": "视觉AI/多模态",
+    "tier": 3
+  },
+  {
+    "name": "Marc Andreessen",
+    "platform_id": "@pmarca",
+    "keywords": ["Marc Andreessen", "a16z", "startup", "venture"],
+    "domain": "创业/投资",
+    "tier": 3
+  },
+  {
+    "name": "Sam Altman",
+    "platform_id": "@sama",
+    "keywords": ["Sam Altman", "OpenAI CEO", "AI"],
+    "domain": "AI行业/OpenAI",
+    "tier": 3
+  },
+  {
+    "name": "Elon Musk",
+    "platform_id": "@elonmusk",
+    "keywords": ["Elon Musk", "Tesla", "SpaceX", "xAI"],
+    "domain": "AI/科技/商业",
+    "tier": 3
+  }
+]

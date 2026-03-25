@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw 磁盘使用情况 - 矩形树图</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .info {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #888;
+      font-size: 14px;
+    }
+    #chart {
+      width: 100%;
+      height: 80vh;
+      background: #16213e;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📂 OpenClaw 磁盘使用情况</h1>
+  <p class="info">总大小: 2.1 GB | 更新于 2026-03-24 17:09</p>
+  <div id="chart"></div>
+
+  <script>
+    const chart = echarts.init(document.getElementById('chart'));
+
+    const data = {"name":".openclaw","value":2150000,"children":[{"name":"browser","value":2097152,"children":[{"name":"user-data","value":2097152,"children":[{"name":"Default","value":1999488,"children":[{"name":"Cache/Cache_Data","value":1572864},{"name":"Code Cache/js","value":327680},{"name":"Service Worker","value":64512},{"name":"IndexedDB","value":11264},{"name":"GPUCache","value":4710},{"name":"Shared Dictionary","value":4198},{"name":"Local Storage","value":1024},{"name":"Cookies","value":800},{"name":"History","value":736},{"name":"Sessions","value":676},{"name":"WebStorage","value":620},{"name":"DawnWebGPUCache","value":584},{"name":"DawnGraphiteCache","value":548},{"name":"Web Applications","value":476},{"name":"Reporting and NEL","value":448},{"name":"Favicons","value":320},{"name":"shared_proto_db","value":280},{"name":"Network Action Predictor","value":224},{"name":"Web Data","value":160},{"name":"Session Storage","value":152}]},{"name":"optimization_guide_model_store","value":44032},{"name":"DeferredBrowserMetrics","value":8192},{"name":"GraphiteDawnCache","value":6758},{"name":"ShaderCache","value":548},{"name":"GrShaderCache","value":548},{"name":"segmentation_platform","value":288}]}]},{"name":"media","value":51184,"children":[{"name":"inbound","value":43008},{"name":"browser","value":8601}]},{"name":"workspace","value":37888,"children":[{"name":"venv","value":16384},{"name":"pingpong","value":15360},{"name":"memory","value":2150},{"name":"skills","value":3072},{"name":"ai-course","value":96},{"name":"scripts","value":60},{"name":"references","value":28},{"name":"scrapling-tool","value":20},{"name":"SKILL.md","value":20},{"name":"hooks","value":12},{"name":"TOOLS.md","value":12},{"name":"AGENTS.md","value":12},{"name":"MEMORY.md","value":8},{"name":"USER.md","value":4},{"name":"SOUL.md","value":4},{"name":"IDENTITY.md","value":4},{"name":"HEARTBEAT.md","value":4},{"name":"BOOTSTRAP.md","value":4},{"name":"generate_jira_excel.py","value":8},{"name":"assets","value":8},{"name":"tmp_img3.jpg","value":248},{"name":"tmp_test_image.jpg","value":120},{"name":"bollinger_bands.png","value":116},{"name":"_meta.json","value":4}]},{"name":"agents","value":37888,"children":[{"name":"main","value":30720},{"name":"invest-advisor","value":6912},{"name":"work-assistant","value":408}]},{"name":"logs","value":3584,"children":[{"name":"gateway.err.log","value":2560},{"name":"gateway.log","value":1024},{"name":"config-audit.jsonl","value":4}]},{"name":"cron","value":508},{"name":"completions","value":456},{"name":"memory","value":136},{"name":"workspace-orchestrator","value":116},{"name":"workspace-invest-advisor","value":108},{"name":"workspace-work-assistant","value":100}]};
+
+    const option = {
+      tooltip: {
+        formatter: function (info) {
+          var value = info.value;
+          var treePathInfo = info.treePathInfo;
+          var treePath = [];
+          for (var i = 1; i < treePathInfo.length; i++) {
+            treePath.push(treePathInfo[i].name);
+          }
+          return [
+            '<div class="tooltip-title">' + echarts.format.encodeHTML(treePath.join('/')) + '</div>',
+            '大小: ' + echarts.format.addSizePrefix(value, 1024)
+          ].join('');
+        }
+      },
+      series: [
+        {
+          name: '磁盘使用',
+          type: 'treemap',
+          visibleMin: 300,
+          label: {
+            show: true,
+            formatter: '{b}'
+          },
+          upperLabel: {
+            show: true,
+            height: 30,
+            color: '#fff'
+          },
+          itemStyle: {
+            borderColor: '#1a1a2e',
+            borderWidth: 2,
+            gapWidth: 2
+          },
+          levels: [
+            {
+              itemStyle: {
+                borderColor: '#1a1a2e',
+                borderWidth: 0,
+                gapWidth: 5
+              },
+              upperLabel: {
+                show: false
+              }
+            },
+            {
+              itemStyle: {
+                borderColor: '#1a1a2e',
+                borderWidth: 5,
+                gapWidth: 1
+              },
+              upperLabel: {
+                show: true,
+                backgroundColor: '#1a1a2e',
+                color: '#eee'
+              }
+            },
+            {
+              colorSaturation: [0.35, 0.5],
+              itemStyle: {
+                borderWidth: 5,
+                borderColorSaturation: 0.6,
+                gapWidth: 1
+              }
+            }
+          ],
+          data: data.children
+        }
+      ]
+    };
+
+    chart.setOption(option);
+
+    window.addEventListener('resize', function () {
+      chart.resize();
+    });
+  </script>
+</body>
+</html>

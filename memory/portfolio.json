@@ -1,0 +1,159 @@
+{
+  "version": "1.0",
+  "created": "2026-03-14",
+  "updated": "2026-03-16",
+  "cash": {
+    "amount": 6000,
+    "currency": "CNY",
+    "note": "计划投入红利低波ETF"
+  },
+  "holdings": [
+    {
+      "name": "黄金ETF易方达",
+      "code": "159934",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 400,
+      "cost": -9.67,
+      "note": "负成本，已实现盈利",
+      "active": false
+    },
+    {
+      "name": "人工智能AIETF",
+      "code": "515070",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 51100,
+      "cost": 2.015,
+      "note": "成本价待确认",
+      "active": false
+    },
+    {
+      "name": "红利低波ETF",
+      "code": "512890",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 2900,
+      "cost": 1.08,
+      "note": "计划追加投资",
+      "active": false
+    },
+    {
+      "name": "香港证券ETF易方达",
+      "code": "513090",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 500,
+      "cost": 1.50,
+      "active": false
+    },
+    {
+      "name": "纳指ETF嘉实",
+      "code": "159941",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 4800,
+      "cost": 1.65,
+      "active": false
+    },
+    {
+      "name": "机器人ETF",
+      "code": "159770",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 6000,
+      "cost": 1.02,
+      "active": false
+    },
+    {
+      "name": "恒生科技ETF大成",
+      "code": "159740",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 5700,
+      "cost": 0.75,
+      "active": false
+    },
+    {
+      "name": "上证50ETF",
+      "code": "510050",
+      "type": "ETF",
+      "market": "A股",
+      "currency": "CNY",
+      "quantity": 300,
+      "cost": 6.88,
+      "active": false
+    },
+    {
+      "name": "小米集团",
+      "code": "1810.HK",
+      "type": "股票",
+      "market": "港股",
+      "currency": "HKD",
+      "quantity": 200,
+      "cost": 52.40,
+      "active": true
+    },
+    {
+      "name": "阿里巴巴",
+      "code": "9988.HK",
+      "type": "股票",
+      "market": "港股",
+      "currency": "HKD",
+      "quantity": 100,
+      "cost": 158.14,
+      "active": true
+    },
+    {
+      "name": "阿里巴巴",
+      "code": "BABA",
+      "type": "股票",
+      "market": "美股",
+      "currency": "USD",
+      "quantity": 28.5,
+      "cost": 156.41,
+      "active": true
+    },
+    {
+      "name": "SPDR黄金信托",
+      "code": "GLD",
+      "type": "ETF",
+      "market": "美股",
+      "currency": "USD",
+      "quantity": 1,
+      "cost": 437.40,
+      "active": true
+    },
+    {
+      "name": "英伟达",
+      "code": "NVDA",
+      "type": "股票",
+      "market": "美股",
+      "currency": "USD",
+      "quantity": 8.9,
+      "cost": 193.29,
+      "active": true
+    },
+    {
+      "name": "标普500ETF",
+      "code": "SPY",
+      "type": "ETF",
+      "market": "美股",
+      "currency": "USD",
+      "quantity": 14.75,
+      "cost": 678.17,
+      "active": true
+    }
+  ],
+  "notes": {
+    "active": "true表示计入每日盈亏计算，false表示暂不计入",
+    "lastUpdate": "2026-03-16"
+  }
+}

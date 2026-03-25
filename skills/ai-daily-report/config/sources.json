@@ -1,0 +1,44 @@
+{
+  "ai_news": {
+    "description": "AI/科技新闻搜索配置",
+    "queries": [
+      "AI artificial intelligence latest news today",
+      "large language model GPT Claude Gemini news",
+      "AI startup funding investment 2025",
+      "OpenAI Anthropic Google DeepMind news"
+    ],
+    "time_range": "day",
+    "max_results_per_query": 3
+  },
+  "global_cases": {
+    "description": "全球搞钱案例来源",
+    "sources": [
+      "https://www.indiehackers.com",
+      "https://www.producthunt.com",
+      "https://www.techcrunch.com"
+    ],
+    "queries": [
+      "AI startup success story revenue",
+      "indiehackers AI tool launched",
+      "AI SaaS bootstrap profitable"
+    ],
+    "time_range": "week",
+    "max_results": 3
+  },
+  "china_cases": {
+    "description": "中国大陆AI创业案例",
+    "queries": [
+      "中国AI创业 大模型 应用",
+      "AI工具出海 中国团队",
+      "Kimi ChatGLM 国产大模型进展"
+    ],
+    "time_range": "week",
+    "max_results": 3
+  },
+  "quote_search": {
+    "description": "金句搜索配置",
+    "time_range": "day",
+    "max_results_per_person": 2,
+    "max_total_people": 15
+  }
+}

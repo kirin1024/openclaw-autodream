@@ -141,6 +141,16 @@
 
 ---学习档案---
 {learning-profile.md 内容}
+
+---任务要求---
+1. 处理用户的课程问题
+2. 回答完成后，**必须**调用 feishu_doc (action=append) 将回答内容写入对应项目的复习笔记
+3. 复习笔记文档：
+   - 项目一：OCfad2VUaodARMxVuxecSl0HnrU
+   - 项目二：Xrd0dxmbGooZKNxmBQLcqZb7nCf
+   - 项目三：AawWd71ynoU79ZxUcOIcVT5enab
+   - 项目四：ClP2dRWZOolICExHtYKcj0cun3x
+4. 写入格式：在复习笔记末尾追加内容，记录问题和回答
 ```
 
 **token 统计**：由 main 附加，格式：`[📊 Tokens: xxx in / xxx out | 模型: xxx]`
@@ -148,3 +158,5 @@
 **学习档案**：`~/.openclaw/workspace-small-school/learning-profile.md`
 
 **默认课程约定**：陈老师不特殊说明时，默认问题针对【AI/LLM 实战课程】（自建课程）
+
+**复习文档补充规则**：小学回答的 AI 课程 Q&A 内容，由 main（首席牛马官）负责补充到复习文档。小学可能无法稳定调用 feishu_doc，所以 main 在转发小学回复后，应主动将 Q&A 内容追加到对应项目的复习笔记。

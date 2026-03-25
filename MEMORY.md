@@ -117,12 +117,19 @@
 
 ## 小学（AI课程助教）架构（2026-03-25）
 
-**小学会话 key**：`agent:small-school:subagent:4d107250-6400-49ea-8d44-ef051e678dc7`
+**实际机制**：`sessions_spawn` 临时唤起模式，非持续监听
+
+**路由流程**：
+1. 群消息 → main（关键词识别）
+2. 命中课程关键词 → main spawn 小学（mode=run）
+3. 小学处理完 → announce 结果回 main
+4. main 发送到群 + 附加 token 统计
 
 **路由触发关键词**（命中则转发小学处理）：
 - 通用：课程、项目、学习、教程、答疑、AI、LLM
 - 项目词：项目1-10、RAG、CLIP、意图识别、文本匹配、多模态、智能客服
 - 技术词：知识库、向量数据库、Embedding、Transformer、BERT
+- Coursera/TensorFlow：tensorflow、coursera、andrew ng
 - 飞书文档：意图识别、智能问答、多模态、RAG
 
 **消息格式**：
@@ -130,4 +137,11 @@
 【课程问题】
 发送者：{sender_name}
 内容：{message_content}
+
+---学习档案---
+{learning-profile.md 内容}
 ```
+
+**token 统计**：由 main 附加，格式：`[📊 Tokens: xxx in / xxx out | 模型: xxx]`
+
+**学习档案**：`~/.openclaw/workspace-small-school/learning-profile.md`

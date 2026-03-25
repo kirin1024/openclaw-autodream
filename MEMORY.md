@@ -112,3 +112,22 @@
 4. main 在内容末尾附加 Token 统计后发送到飞书群
 
 **Token 统计**：由 main（首席牛马官）执行，格式：`[📊 Tokens: xxx in / xxx out | 模型: xxx]`
+
+---
+
+## 小学（AI课程助教）架构（2026-03-25）
+
+**小学会话 key**：`agent:small-school:subagent:4d107250-6400-49ea-8d44-ef051e678dc7`
+
+**路由触发关键词**（命中则转发小学处理）：
+- 通用：课程、项目、学习、教程、答疑、AI、LLM
+- 项目词：项目1-10、RAG、CLIP、意图识别、文本匹配、多模态、智能客服
+- 技术词：知识库、向量数据库、Embedding、Transformer、BERT
+- 飞书文档：意图识别、智能问答、多模态、RAG
+
+**消息格式**：
+```
+【课程问题】
+发送者：{sender_name}
+内容：{message_content}
+```

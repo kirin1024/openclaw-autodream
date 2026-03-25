@@ -145,3 +145,5 @@
 **token 统计**：由 main 附加，格式：`[📊 Tokens: xxx in / xxx out | 模型: xxx]`
 
 **学习档案**：`~/.openclaw/workspace-small-school/learning-profile.md`
+
+**默认课程约定**：陈老师不特殊说明时，默认问题针对【AI/LLM 实战课程】（自建课程）

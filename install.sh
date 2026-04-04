@@ -87,7 +87,11 @@ cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
 
 ## 输入数据
 
-你会收到 MEMORY.md、topic 文件摘要、信号模式匹配结果、完整对话记录、已有的 pending-changes。按 4 阶段流程处理。
+你会收到 MEMORY.md、topic 文件摘要、信号模式匹配结果、完整对话记录、已有的 pending-changes，以及两项显式日期：
+- **RUN_DATE**：本次运行日期（脚本实际执行的日期）
+- **CONTENT_DATE**：本次归整内容所属日期（用于命名输出文件）
+
+按 4 阶段流程处理。
 
 ---
 
@@ -124,7 +128,12 @@ cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
 
 ## Phase 3: CONSOLIDATE — 生成变更提案
 
-把发现写入 `memory/pending-changes/YYYY-MM-DD.md`。
+把发现写入 `memory/pending-changes/CONTENT_DATE.md`。
+
+**命名规则（方案 B，必须严格遵守）**：
+- 文件名使用 **CONTENT_DATE**，不是 RUN_DATE
+- 例子：如果脚本在 `2026-04-05 03:00` 运行，但归整的是 `2026-04-04` 的内容，那么必须写入 `memory/pending-changes/2026-04-04.md`
+- 如果同一次运行还要生成分析报告，报告文件也使用同一个 **CONTENT_DATE**
 
 每条提案格式：
 
@@ -157,14 +166,14 @@ cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
 - 超过 90 天且引用次数低的条目 → 标记为"建议删除"
 - 注意：⚠️ PERMANENT 和 📌 PIN 标记的条目完全免疫归档
 
-将归档提案也写入当天的 pending-changes 文件。
+将归档提案也写入 `CONTENT_DATE` 对应的 pending-changes 文件。
 
 ---
 
 ## 输出要求
 
-1. **变更提案**：写入 `memory/pending-changes/YYYY-MM-DD.md`
-2. **分析报告**：写入 `memory/kairos-dream-YYYY-MM-DD.md`，包含：
+1. **变更提案**：写入 `memory/pending-changes/CONTENT_DATE.md`
+2. **分析报告**：写入 `memory/kairos-dream-CONTENT_DATE.md`，包含：
    - ORIENT 总结
    - GATHER 发现的信号数
    - CONSOLIDATE 生成的变更数
@@ -336,9 +345,16 @@ LOG_DIR="$WORKSPACE_MAIN/scripts/logs"
 LOG_FILE="$LOG_DIR/auto-dream.log"
 SCRIPTS_DIR="$WORKSPACE_MAIN/scripts"
 DREAM_STATE="$WORKSPACE_MAIN/memory/dream-state.json"
+RUN_DATE=$(date '+%Y-%m-%d')
+RUN_HOUR=$(date '+%H')
+if [ "$RUN_HOUR" -lt 6 ]; then
+    CONTENT_DATE=$(date -v-1d '+%Y-%m-%d')
+else
+    CONTENT_DATE="$RUN_DATE"
+fi
 
 mkdir -p "$LOG_DIR"
-echo "🌙 [$(date '+%Y-%m-%d %H:%M:%S')] AutoDream triggered (v3)" >> "$LOG_FILE"
+echo "🌙 [$(date '+%Y-%m-%d %H:%M:%S')] AutoDream triggered (v3) | run_date=$RUN_DATE content_date=$CONTENT_DATE" >> "$LOG_FILE"
 
 # --- Phase 0: 累积触发检查 ---
 if [ "$1" = "--check-only" ]; then
@@ -383,6 +399,14 @@ FULL_TASK="${TASK_CONTENT}
 
 ---
 
+## 本次运行元信息
+
+- RUN_DATE: ${RUN_DATE}
+- CONTENT_DATE: ${CONTENT_DATE}
+- 命名规则：所有输出文件必须使用 CONTENT_DATE 命名；不要使用 RUN_DATE 命名 pending-changes 或 kairos-dream 文件。
+
+---
+
 ## Phase 1: ORIENT — 当前 Memory 状态
 
 ### MEMORY.md（索引层）
@@ -423,21 +447,21 @@ ${EXISTING_PENDING}
 
 1. 用 4 阶段流程分析：ORIENT → GATHER → CONSOLIDATE → PRUNE
 2. 每条变更提案包含来源证据，标注可信度：high/medium/low
-3. 生成报告到 memory/kairos-dream-$(date '+%Y-%m-%d').md"
+3. 变更提案写到 memory/pending-changes/${CONTENT_DATE}.md
+4. 分析报告写到 memory/kairos-dream-${CONTENT_DATE}.md"
 
 # --- 触发 auto-dream Agent ---
 openclaw agent --agent auto-dream --message "$FULL_TASK" --json >> "$LOG_FILE" 2>&1
 
 # --- 拷贝结果 ---
-TODAY=$(date '+%Y-%m-%d')
-if [ -f "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$TODAY.md" ]; then
+if [ -f "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" ]; then
     mkdir -p "$WORKSPACE_MAIN/memory/pending-changes"
-    cp "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$TODAY.md" "$WORKSPACE_MAIN/memory/pending-changes/$TODAY.md" 2>/dev/null
-    CHANGES=$(grep -c "^## 变更" "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$TODAY.md" 2>/dev/null || echo "0")
-    echo "📋 待处理变更: $CHANGES 条" >> "$LOG_FILE"
+    cp "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" "$WORKSPACE_MAIN/memory/pending-changes/$CONTENT_DATE.md" 2>/dev/null
+    CHANGES=$(grep -c "^## 变更" "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" 2>/dev/null || echo "0")
+    echo "📋 待处理变更: $CHANGES 条 | file=$CONTENT_DATE.md" >> "$LOG_FILE"
 fi
-if [ -f "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$TODAY.md" ]; then
-    cp "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$TODAY.md" "$WORKSPACE_MAIN/memory/kairos-dream-$TODAY.md" 2>/dev/null
+if [ -f "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$CONTENT_DATE.md" ]; then
+    cp "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$CONTENT_DATE.md" "$WORKSPACE_MAIN/memory/kairos-dream-$CONTENT_DATE.md" 2>/dev/null
 fi
 
 # --- 更新 dream-state.json ---
@@ -449,7 +473,8 @@ if os.path.exists(state_file):
 else:
     state = {}
 state['last_dream_time'] = '$(date '+%Y-%m-%dT%H:%M:%S+08:00')'
-state['last_dream_date'] = '$TODAY'
+state['last_dream_date'] = '$CONTENT_DATE'
+state['last_run_date'] = '$RUN_DATE'
 state['cumulative_turns'] = 0
 with open(state_file, 'w') as f:
     json.dump(state, f, ensure_ascii=False, indent=2)

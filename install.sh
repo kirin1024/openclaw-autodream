@@ -826,8 +826,8 @@ echo ""
 echo '     ## AutoDream 启动检查'
 echo '     每次会话开始时，检查 memory/pending-changes/ 目录：'
 echo '     1. 列出所有 .md 文件'
-echo '     2. 如有内容，读取并向陈老师展示待处理变更摘要'
-echo '     3. 请陈老师确认要执行哪些变更'
+echo '     2. 如有内容，读取并向用户展示待处理变更摘要'
+echo '     3. 请用户确认要执行哪些变更'
 echo '     4. 执行确认的变更后，删除该 pending 文件'
 echo ""
 echo -e "${BOLD}可选：${NC}"

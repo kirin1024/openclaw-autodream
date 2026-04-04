@@ -195,7 +195,7 @@ launchctl load ~/Library/LaunchAgents/com.openclaw.auto-dream.plist
   3. 如果距上次 dream 超过 6 小时 且 累积轮数 ≥ 30：
      - 更新 dream-state.json
      - spawn auto-dream agent（运行 trigger-auto-dream.sh）
-     - 通知陈老师
+     - 通知用户
   4. 如果凌晨 3:00-5:00 且今天还没跑过 → 强制触发
 ```
 
@@ -208,8 +208,8 @@ launchctl load ~/Library/LaunchAgents/com.openclaw.auto-dream.plist
 
 每次会话开始时，检查 `memory/pending-changes/` 目录：
 1. 列出所有 `.md` 文件
-2. 如有内容，读取并向陈老师展示待处理变更摘要
-3. 请陈老师确认要执行哪些变更
+2. 如有内容，读取并向用户展示待处理变更摘要
+3. 请用户确认要执行哪些变更
 4. 执行确认的变更后，删除该 pending 文件
 ```
 

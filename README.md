@@ -21,19 +21,32 @@
 
 ## 📦 快速安装
 
+> 二选一即可，install.sh 幂等，可重复运行。
+
+### 方式 A：从 ClawHub 安装（推荐）
+
 ```bash
-# 方式 A：一键安装（推荐，30 秒完成）
+# 第 1 步：下载 Skill 到本地
 openclaw skills install autodream
+
+# 第 2 步：运行安装脚本（自动配置 Agent、定时任务等）
 bash ~/.openclaw/workspace/skills/autodream/install.sh
 
-# 然后重启 Gateway
+# 第 3 步：重启 Gateway
 openclaw gateway restart
 ```
 
-或者直接下载 `install.sh` 并运行：
+### 方式 B：从源码安装
 
 ```bash
-bash ~/.openclaw/workspace/skills/autodream/install.sh
+# 克隆仓库到 skills 目录
+git clone https://github.com/你的用户名/openclaw-skills ~/.openclaw/workspace/skills/openclaw-skills
+
+# 运行安装脚本
+bash ~/.openclaw/workspace/skills/openclaw-skills/autodream/install.sh
+
+# 重启 Gateway
+openclaw gateway restart
 ```
 
 install.sh 会自动完成：

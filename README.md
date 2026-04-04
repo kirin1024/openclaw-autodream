@@ -40,10 +40,10 @@ openclaw gateway restart
 
 ```bash
 # 克隆仓库到 skills 目录
-git clone https://github.com/kirin1024/openclaw-skills ~/.openclaw/workspace/skills/openclaw-skills
+git clone https://github.com/kirin1024/openclaw-autodream ~/.openclaw/workspace/skills/openclaw-autodream
 
 # 运行安装脚本
-bash ~/.openclaw/workspace/skills/openclaw-skills/autodream/install.sh
+bash ~/.openclaw/workspace/skills/openclaw-autodream/install.sh
 
 # 重启 Gateway
 openclaw gateway restart

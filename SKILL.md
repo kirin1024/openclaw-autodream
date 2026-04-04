@@ -106,7 +106,7 @@ mkdir -p ~/.openclaw/workspace/memory/pending-changes
 
 ### 第 4 步：创建 AutoDream 任务文件
 
-保存到 `~/.openclaw/workspace-auto-dream/auto-dream-task.md`。见 [auto-dream-task.md 的完整内容](https://github.com/kirin1024/openclaw-skills)。任务文件定义了 4 阶段流程的详细指令。
+保存到 `~/.openclaw/workspace-auto-dream/auto-dream-task.md`。见 [auto-dream-task.md 的完整内容](https://github.com/kirin1024/openclaw-autodream)。任务文件定义了 4 阶段流程的详细指令。
 
 ### 第 5 步：创建会话解析脚本 v3
 

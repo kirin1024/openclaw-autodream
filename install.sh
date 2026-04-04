@@ -17,6 +17,8 @@ SCRIPTS_DIR="${WORKSPACE_MAIN}/scripts"
 LOG_DIR="${SCRIPTS_DIR}/logs"
 MEMORY_DIR="${WORKSPACE_MAIN}/memory"
 MEMORY_PENDING="${MEMORY_DIR}/pending-changes"
+REMINDER_CONFIG="${MEMORY_DIR}/autodream-reminder.json"
+AGENTS_MD="${WORKSPACE_MAIN}/AGENTS.md"
 OPENCLAW_JSON="${OPENCLAW_DIR}/openclaw.json"
 LAUNCHD_PLIST="${HOME_DIR}/Library/LaunchAgents/com.openclaw.auto-dream.plist"
 
@@ -71,9 +73,72 @@ echo "  $SKILL_DIR/"
 success "目录结构创建完成"
 
 #===============================================================================
-# 第 3 步：写入核心文件
+# 第 3 步：配置提醒时机
 #===============================================================================
-step "3. 写入核心文件"
+step "3. 配置提醒时机"
+echo ""
+echo "请选择 AutoDream 生成 pending-changes 后的提醒时机："
+echo "  1) 手动触发完，当前终端立即提醒"
+echo "  2) 每天定时触发完成后提醒（macOS 本地通知）"
+echo "  3) 一旦生成 pending，本轮立即提醒（终端 + 本地通知）"
+echo "  4) 下一次用户发消息，主 Agent 先检查 pending 再提醒（推荐）"
+echo ""
+read -r -p "请输入选项 [默认 4]: " REMINDER_CHOICE
+case "$REMINDER_CHOICE" in
+    1) REMINDER_MODE="manual_after_run"; REMINDER_LABEL="手动触发完立即提醒" ;;
+    2) REMINDER_MODE="daily_after_run"; REMINDER_LABEL="每天定时触发完成后提醒" ;;
+    3) REMINDER_MODE="immediate_after_pending"; REMINDER_LABEL="生成 pending 后立即提醒" ;;
+    4|"") REMINDER_MODE="next_user_message"; REMINDER_LABEL="下一次用户发消息时提醒" ;;
+    *) warn "无效选项，已使用默认值 4"; REMINDER_MODE="next_user_message"; REMINDER_LABEL="下一次用户发消息时提醒" ;;
+esac
+
+python3 - <<PYCFG
+import json, os
+path = os.path.expanduser("$REMINDER_CONFIG")
+os.makedirs(os.path.dirname(path), exist_ok=True)
+with open(path, "w") as f:
+    json.dump({"mode": "$REMINDER_MODE", "label": "$REMINDER_LABEL"}, f, ensure_ascii=False, indent=2)
+PYCFG
+success "提醒时机已保存：$REMINDER_LABEL"
+
+if [ "$REMINDER_MODE" = "next_user_message" ] && [ -f "$AGENTS_MD" ]; then
+AUTO_PATCH_RESULT=$(python3 - <<PYAGENTS
+import os
+from pathlib import Path
+path = Path(os.path.expanduser("$AGENTS_MD"))
+text = path.read_text()
+block = """
+## AutoDream 启动检查
+
+每次会话开始时，检查 `memory/pending-changes/` 目录：
+1. 列出所有 `.md` 文件
+2. 如有内容，读取最新一个 pending 文件并向用户展示待处理变更摘要
+3. 请用户确认要执行哪些变更（确认 / 拒绝 / 稍后）
+4. 在处理 pending 之前，暂停无关任务，除非用户明确要求跳过
+"""
+if '## AutoDream 启动检查' not in text:
+    anchor = "Don't ask permission. Just do it.\n"
+    if anchor in text:
+        text = text.replace(anchor, anchor + block)
+        path.write_text(text)
+        print('PATCHED')
+    else:
+        print('MISSING_ANCHOR')
+else:
+    print('EXISTS')
+PYAGENTS
+)
+    if [ "$AUTO_PATCH_RESULT" = "PATCHED" ] || [ "$AUTO_PATCH_RESULT" = "EXISTS" ]; then
+        success "已自动为主 Agent 接入“下次用户发消息时提醒”规则（若原先不存在）"
+    else
+        warn "自动 patch AGENTS.md 失败，请按 README 手动添加 AutoDream 启动检查规则"
+    fi
+fi
+
+#===============================================================================
+# 第 4 步：写入核心文件
+#===============================================================================
+step "4. 写入核心文件"
 
 # --- auto-dream-task.md ---
 cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
@@ -456,15 +521,39 @@ ${EXISTING_PENDING}
 openclaw agent --agent auto-dream --message "$FULL_TASK" --json >> "$LOG_FILE" 2>&1
 
 # --- 拷贝结果 ---
+CHANGES=0
+PENDING_FILE="$WORKSPACE_MAIN/memory/pending-changes/$CONTENT_DATE.md"
 if [ -f "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" ]; then
     mkdir -p "$WORKSPACE_MAIN/memory/pending-changes"
-    cp "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" "$WORKSPACE_MAIN/memory/pending-changes/$CONTENT_DATE.md" 2>/dev/null
+    cp "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" "$PENDING_FILE" 2>/dev/null
     CHANGES=$(grep -c "^## 变更" "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" 2>/dev/null || echo "0")
     echo "📋 待处理变更: $CHANGES 条 | file=$CONTENT_DATE.md" >> "$LOG_FILE"
 fi
 if [ -f "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$CONTENT_DATE.md" ]; then
     cp "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$CONTENT_DATE.md" "$WORKSPACE_MAIN/memory/kairos-dream-$CONTENT_DATE.md" 2>/dev/null
 fi
+
+case "$REMINDER_MODE" in
+    manual_after_run)
+        if [ "$TRIGGER_CONTEXT" = "manual" ] && [ "$CHANGES" -gt 0 ]; then
+            print_pending_summary "$CHANGES" "$PENDING_FILE"
+        fi
+        ;;
+    daily_after_run)
+        if [ "$TRIGGER_CONTEXT" = "scheduled" ] && [ "$CHANGES" -gt 0 ]; then
+            notify_local "AutoDream 已完成" "${CONTENT_DATE} 有 ${CHANGES} 条待确认变更"
+        fi
+        ;;
+    immediate_after_pending)
+        if [ "$CHANGES" -gt 0 ]; then
+            print_pending_summary "$CHANGES" "$PENDING_FILE"
+            notify_local "AutoDream 待确认变更" "${CONTENT_DATE} 有 ${CHANGES} 条待确认变更"
+        fi
+        ;;
+    next_user_message|*)
+        echo "⏭️ 待提醒：下次用户发消息时检查 pending-changes" >> "$LOG_FILE"
+        ;;
+esac
 
 # --- 更新 dream-state.json ---
 python3 -c "
@@ -733,9 +822,9 @@ else
 fi
 
 #===============================================================================
-# 第 4 步：配置 openclaw.json（追加 auto-dream Agent）
+# 第 5 步：配置 openclaw.json（追加 auto-dream Agent）
 #===============================================================================
-step "4. 配置 openclaw.json"
+step "5. 配置 openclaw.json"
 
 # 检查 auto-dream 是否已存在，并决定是否追加
 AUTO_DREAM_CHECK=$(python3 -c "
@@ -785,9 +874,9 @@ else
 fi
 
 #===============================================================================
-# 第 5 步：配置 launchd 定时任务
+# 第 6 步：配置 launchd 定时任务
 #===============================================================================
-step "5. 配置 macOS launchd 定时任务"
+step "6. 配置 macOS launchd 定时任务"
 
 if [ -f "$LAUNCHD_PLIST" ]; then
     success "launchd plist 已存在，跳过"
@@ -834,30 +923,21 @@ PLIST_EOF
 fi
 
 #===============================================================================
-# 第 6 步：打印完成信息
+# 第 7 步：打印完成信息
 #===============================================================================
 echo ""
 echo "========================================"
 echo -e "${GREEN}${BOLD}✅ AutoDream 安装完成！${NC}"
 echo "========================================"
 echo ""
-echo -e "${BOLD}需要手动确认的步骤（2步）：${NC}"
+echo -e "${BOLD}需要手动确认的步骤（1步）：${NC}"
 echo ""
 echo -e "  ${YELLOW}①${NC} 重启 Gateway（使 auto-dream Agent 生效）："
 echo -e "     ${CYAN}openclaw gateway restart${NC}"
 echo ""
-echo -e "  ${YELLOW}②${NC} 更新主 Agent 的 AGENTS.md（启动时检查 pending-changes）："
-echo -e "     在 AGENTS.md 的 ## Every Session 部分添加："
-echo ""
-echo '     ## AutoDream 启动检查'
-echo '     每次会话开始时，检查 memory/pending-changes/ 目录：'
-echo '     1. 列出所有 .md 文件'
-echo '     2. 如有内容，读取并向用户展示待处理变更摘要'
-echo '     3. 请用户确认要执行哪些变更'
-echo '     4. 执行确认的变更后，删除该 pending 文件'
-echo ""
-echo -e "${BOLD}可选：${NC}"
-echo -e "  ${CYAN}openclaw gateway restart${NC}  # 使 auto-dream Agent 生效"
+echo -e "${BOLD}已配置的提醒时机：${NC} ${REMINDER_LABEL}"
+echo -e "  配置文件：${CYAN}${REMINDER_CONFIG}${NC}"
+echo -e "  说明：1/3 适合手动运行时立即反馈，2 适合每日定时提醒，4 适合主 Agent 在下次对话时优先提醒。"
 echo ""
 echo -e "${BOLD}验证安装：${NC}"
 echo -e "  ${CYAN}bash $SCRIPTS_DIR/trigger-auto-dream.sh --check-only${NC}   # 检查状态"

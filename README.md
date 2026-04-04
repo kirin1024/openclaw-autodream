@@ -155,8 +155,6 @@ open ~/.openclaw/workspace/memory/dream-dashboard.html
 - 每条提案包含**来源证据**，便于验证
 - 每条提案包含**可信度标注**，辅助判断
 - **绝不记录敏感凭证**：密码、Token、API Key、SSH 私钥、公钥全文、Cookie、Session、Recovery Code、验证码、账号密保答案等，哪怕它们在对话中出现过
-- **绝不记录远程写权限能力**：不会把“这台机器可以 push / publish / deploy / 发消息 / 改线上配置”这类环境写权限能力写入 pending-changes、报告或 memory 提案
-- **只保留最小非敏感事实**：可记录“存在某个仓库/项目”或“使用 GitHub 协作”，但不会记录认证方式、是否已登录、是否具备写权限、凭证位置或凭证是否可用
 
 ## 🧪 验证安装
 

@@ -44,6 +44,7 @@ description: "启用 AutoDream —— OpenClaw 自动记忆维护。定期读取
 ### 方式 A：一键安装（推荐，30 秒完成）
 
 ```bash
+# 方式 A：一键安装（推荐，30 秒完成）
 bash ~/.openclaw/workspace/skills/autodream/install.sh
 ```
 

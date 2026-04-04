@@ -22,11 +22,18 @@
 ## 📦 快速安装
 
 ```bash
-# 一键安装（推荐）
+# 方式 A：一键安装（推荐，30 秒完成）
+openclaw skills install autodream
 bash ~/.openclaw/workspace/skills/autodream/install.sh
 
 # 然后重启 Gateway
 openclaw gateway restart
+```
+
+或者直接下载 `install.sh` 并运行：
+
+```bash
+bash ~/.openclaw/workspace/skills/autodream/install.sh
 ```
 
 install.sh 会自动完成：
@@ -72,7 +79,9 @@ install.sh 会自动完成：
 ~/.openclaw/workspace/
 ├── skills/autodream/
 │   ├── SKILL.md          # Skill 描述（中文）
-│   └── install.sh        # 一键安装脚本
+│   ├── install.sh        # 一键安装脚本
+│   ├── README.md         # 本文件
+│   └── scripts/
 ├── scripts/
 │   ├── parse-sessions.py      # 会话解析 v3（3 种输出模式）
 │   ├── trigger-auto-dream.sh  # 4 阶段触发脚本

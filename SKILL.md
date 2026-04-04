@@ -39,20 +39,21 @@ description: "启用 AutoDream —— OpenClaw 自动记忆维护。定期读取
 - 已配置至少一个 Agent（主 Agent）
 - 系统有 Python 3
 
-## 安装步骤（两种方式）
+## 安装步骤
 
-### 方式 A：一键安装（推荐，30 秒完成）
+### 方式：源码安装
 
 ```bash
-# 方式 A：一键安装（推荐，30 秒完成）
-bash ~/.openclaw/workspace/skills/autodream/install.sh
+# 克隆仓库到 skills 目录
+git clone https://github.com/kirin1024/openclaw-autodream ~/.openclaw/workspace/skills/openclaw-autodream
+
+# 运行安装脚本
+bash ~/.openclaw/workspace/skills/openclaw-autodream/install.sh
 ```
 
 脚本自动完成所有配置（目录、文件、openclaw.json、launchd），完成后打印需要手动确认的 2 步。
 
 **install.sh 会自动检测已安装的组件并跳过**，可以重复运行。
-
-### 方式 B：手动分步安装
 
 如果你是开发者或想了解每个步骤，手动执行以下 11 步。
 

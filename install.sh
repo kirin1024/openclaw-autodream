@@ -191,6 +191,10 @@ cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
 5. **仅追加**到 pending-changes，不覆盖
 6. **过滤 cron 噪音** —— 跳过自动化任务
 7. **排除自身** —— 不分析 auto-dream 的 session
+8. **禁止记录敏感凭证** —— 不得写入密码、Token、API Key、SSH 私钥、公钥全文、Cookie、Session、Recovery Code、验证码、账号密保答案，哪怕用户在对话中明文发送过
+9. **禁止记录远程写权限能力** —— 不得把“这台机器可以 push/publish/deploy/发消息/改线上配置/拥有某平台写权限”这类环境能力写入 pending-changes、kairos 报告或任何 memory 提案
+10. **允许保留的最小事实** —— 只可记录非敏感事实，例如“存在某个仓库/项目”或“使用 GitHub 协作”；但不得记录认证方式、是否已登录、是否具备写权限、凭证位置、凭证是否可用
+11. **发现敏感信息时的处理** —— 直接忽略，不摘录、不总结、不改写、不做来源证据引用；如果某条提案依赖敏感信息才能成立，则整条提案放弃
 TASK_EOF
 echo "  auto-dream-task.md"
 success "写入 auto-dream-task.md"

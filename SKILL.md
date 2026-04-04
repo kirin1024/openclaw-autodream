@@ -26,7 +26,7 @@ description: "启用 AutoDream —— OpenClaw 自动记忆维护。定期读取
 - **4 阶段流程**：借鉴 dream-skill 的 ORIENT→GATHER→CONSOLIDATE→PRUNE 模型
 - **grep 模式匹配**：5 类信号（用户纠正、偏好变更、重要决策、重复模式、配置变更），效率比全文读取高 10 倍
 - **暂存区模式**：auto-dream 只写提案，不直接改 topic 文件。主 Agent + 用户确认后再执行
-- **全 Agent 扫描**：读取所有 Agent 的 session（main、qiwen、invest-advisor 等），不只是 main
+- **全 Agent 扫描**：读取所有 Agent 的 session（main、子 Agent 等），不只是 main
 - **排除自身**：auto-dream 自己的 session 被排除，防止自引用循环
 - **过滤自动化任务**：cron 任务、mac 负载记录、heartbeat 等自动过滤，减少噪音
 - **来源证据**：每条提案附带原始对话片段，便于验证
@@ -106,7 +106,7 @@ mkdir -p ~/.openclaw/workspace/memory/pending-changes
 
 ### 第 4 步：创建 AutoDream 任务文件
 
-保存到 `~/.openclaw/workspace-auto-dream/auto-dream-task.md`。见 [auto-dream-task.md 的完整内容](https://github.com/你的仓库)。任务文件定义了 4 阶段流程的详细指令。
+保存到 `~/.openclaw/workspace-auto-dream/auto-dream-task.md`。见 [auto-dream-task.md 的完整内容](https://github.com/kirin1024/openclaw-skills)。任务文件定义了 4 阶段流程的详细指令。
 
 ### 第 5 步：创建会话解析脚本 v3
 
@@ -159,7 +159,7 @@ v3 新增功能：
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/你的用户名/.openclaw/workspace/scripts/trigger-auto-dream.sh</string>
+        <string>/Users/<用户名>/.openclaw/workspace/scripts/trigger-auto-dream.sh</string>
     </array>
     <key>StartCalendarInterval</key>
     <dict>
@@ -169,9 +169,9 @@ v3 新增功能：
         <integer>0</integer>
     </dict>
     <key>StandardOutPath</key>
-    <string>/Users/你的用户名/.openclaw/workspace/scripts/logs/auto-dream.log</string>
+    <string>/Users/<用户名>/.openclaw/workspace/scripts/logs/auto-dream.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/你的用户名/.openclaw/workspace/scripts/logs/auto-dream.err</string>
+    <string>/Users/<用户名>/.openclaw/workspace/scripts/logs/auto-dream.err</string>
 </dict>
 </plist>
 ```

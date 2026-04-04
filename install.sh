@@ -729,7 +729,6 @@ auto_dream_agent = {
     'id': 'auto-dream',
     'name': 'AutoDream',
     'workspace': os.path.expanduser('~/.openclaw/workspace-auto-dream'),
-    'model': 'minimax-portal/MiniMax-M2.5',
     'identity': {'name': 'AutoDream', 'emoji': '🌙'},
     'tools': {
         'allow': ['read', 'edit', 'write', 'session_status'],

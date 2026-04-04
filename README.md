@@ -13,7 +13,7 @@
 | **4 阶段流程** | ORIENT → GATHER → CONSOLIDATE → PRUNE，借鉴自 [dream-skill](https://github.com/grandamenium/dream-skill) |
 | **grep 模式匹配** | 5 类信号自动识别（用户纠正/偏好变更/重要决策/重复模式/配置变更），效率比全文读取高 10 倍 |
 | **暂存区模式** | AutoDream 只写提案到 `pending-changes/`，主 Agent 审核后才执行，避免错误写入污染记忆 |
-| **全 Agent 扫描** | 扫描所有 Agent 的 session（main、qiwen、invest-advisor 等），不只是主 Agent |
+| **全 Agent 扫描** | 扫描所有 Agent 的 session（main、子 Agent 等），不只是主 Agent |
 | **累积触发** | Heartbeat 检测对话轮数，达到阈值自动触发；凌晨 3:00 也强制触发 |
 | **Dashboard 可视化** | 交互式 HTML 仪表板，5 维健康指标（新鲜度/覆盖度/连通度/效率/可达性） |
 | **install.sh 一键安装** | 借鉴 [dream-skill](https://github.com/grandamenium/dream-skill) 的 install.sh 设计，30 秒完成 |
@@ -40,7 +40,7 @@ openclaw gateway restart
 
 ```bash
 # 克隆仓库到 skills 目录
-git clone https://github.com/你的用户名/openclaw-skills ~/.openclaw/workspace/skills/openclaw-skills
+git clone https://github.com/kirin1024/openclaw-skills ~/.openclaw/workspace/skills/openclaw-skills
 
 # 运行安装脚本
 bash ~/.openclaw/workspace/skills/openclaw-skills/autodream/install.sh

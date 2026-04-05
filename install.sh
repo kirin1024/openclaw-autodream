@@ -386,7 +386,8 @@ def main():
                 if filepath not in reset_paths: continue
             else:
                 if datetime.fromtimestamp(os.path.getmtime(filepath)) < cutoff: continue
-            msgs, user_turns, chars = extract_messages(filepath)
+            max_l = MAX_LINES_PER_FILE if mode != "semantic" else 100
+            msgs, user_turns, chars = extract_messages(filepath, max_lines=max_l)
             if msgs:
                 agent_msgs.extend(msgs); agent_findings.extend(scan_patterns(msgs))
                 agent_files += 1; total_user_turns += user_turns; total_chars += chars
@@ -414,6 +415,7 @@ def main():
         # 不做 grep 过滤，保留全部消息上下文，让 LLM 理解语义
         output = f"# 🧠 GATHER — 语义分析输入（最近 24 小时，自 {cutoff_str}）\n\n"
         output += f"**Agent 数**: {len(session_stats)} | **消息数**: {total_messages} | **用户轮次**: {total_turns}\n\n"
+        output += f"**每个文件扫描行数**: 100 行（scan/transcript 模式为 30 行）\n\n"
         output += "**指令**：以下对话由各 Agent 的 session 提取而来。请阅读后自行判断哪些信息值得记录到 memory，包括但不限于：\n"
         output += "- 创建了什么外部资源（飞书文档、GitHub 仓库、文件等）\n"
         output += "- 做了哪些重要决策（即使没有明确的'决定了'措辞）\n"

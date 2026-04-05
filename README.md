@@ -17,7 +17,7 @@
 | **累积触发** | Heartbeat 检测对话轮数，达到阈值自动触发；凌晨 3:00 也强制触发 |
 | **Dashboard 可视化** | 交互式 HTML 仪表板，5 维健康指标（新鲜度/覆盖度/连通度/效率/可达性） |
 | **install.sh 一键安装** | 借鉴 [dream-skill](https://github.com/grandamenium/dream-skill) 的 install.sh 设计，30 秒完成 |
-| **语义分析模式** | 新增 `semantic` 输出模式，输出完整对话原文给 auto-dream Agent，让 LLM 自行判断语义重要性，弥补 grep 关键词匹配的盲区 |
+| **语义分析模式** | 新增 `semantic` 输出模式，输出完整对话原文给 auto-dream Agent，让 LLM 自行判断语义重要性，弥补 grep 关键词匹配的盲区；**semantic 每文件 100 行，其余模式 30 行** |
 
 ## 📦 快速安装
 
@@ -55,7 +55,8 @@ install.sh 会自动完成：
 │  Phase 1: ORIENT — 读取 MEMORY.md + topic 文件       │
 │  Phase 2: GATHER — grep 信号 + 语义分析 + 完整对话  │
 │     ├─ 7 类信号：纠正/偏好/决策/重复/配置/资源/文件创建 │
-│     ├─ semantic 模式：LLM 自主判断语义重要性        │
+│     ├─ semantic 模式：LLM 自主判断语义重要性（100行） │
+│     ├─ 其他模式：每文件默认 30 行                    │
 │     └─ 对话深度评分                                  │
 │  Phase 3: CONSOLIDATE — 生成变更提案（暂存区）       │
 │     ├─ 每条附带来源证据                              │

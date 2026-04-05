@@ -11,13 +11,13 @@
 | 特性 | 说明 |
 |------|------|
 | **4 阶段流程** | ORIENT → GATHER → CONSOLIDATE → PRUNE，借鉴自 [dream-skill](https://github.com/grandamenium/dream-skill) |
-| **grep 模式匹配** | 5 类信号自动识别（用户纠正/偏好变更/重要决策/重复模式/配置变更），效率比全文读取高 10 倍 |
+| **grep 模式匹配** | 7 类信号自动识别（用户纠正/偏好变更/重要决策/重复模式/配置变更/**外部资源**/**文件创建**），效率比全文读取高 10 倍 |
 | **暂存区模式** | AutoDream 只写提案到 `pending-changes/`，主 Agent 审核后才执行，避免错误写入污染记忆 |
 | **全 Agent 扫描** | 扫描所有 Agent 的 session（main、子 Agent 等），不只是主 Agent |
 | **累积触发** | Heartbeat 检测对话轮数，达到阈值自动触发；凌晨 3:00 也强制触发 |
 | **Dashboard 可视化** | 交互式 HTML 仪表板，5 维健康指标（新鲜度/覆盖度/连通度/效率/可达性） |
 | **install.sh 一键安装** | 借鉴 [dream-skill](https://github.com/grandamenium/dream-skill) 的 install.sh 设计，30 秒完成 |
-| **reset 文件扫描** | 自动扫描 Session Compaction 备份（`.jsonl.reset.*`），防止重置后信息丢失；24 小时窗口 + 最多 20 个文件上限 |
+| **语义分析模式** | 新增 `semantic` 输出模式，输出完整对话原文给 auto-dream Agent，让 LLM 自行判断语义重要性，弥补 grep 关键词匹配的盲区 |
 
 ## 📦 快速安装
 
@@ -53,8 +53,9 @@ install.sh 会自动完成：
 │  触发方式 B：Heartbeat 检测到累积轮数 ≥ 30          │
 ├──────────────────────────────────────────────────────┤
 │  Phase 1: ORIENT — 读取 MEMORY.md + topic 文件       │
-│  Phase 2: GATHER — grep 模式匹配 + 完整对话          │
-│     ├─ 5 类信号：用户纠正/偏好/决策/重复/配置        │
+│  Phase 2: GATHER — grep 信号 + 语义分析 + 完整对话  │
+│     ├─ 7 类信号：纠正/偏好/决策/重复/配置/资源/文件创建 │
+│     ├─ semantic 模式：LLM 自主判断语义重要性        │
 │     └─ 对话深度评分                                  │
 │  Phase 3: CONSOLIDATE — 生成变更提案（暂存区）       │
 │     ├─ 每条附带来源证据                              │

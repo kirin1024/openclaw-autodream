@@ -2,7 +2,7 @@
 """
 AutoDream Session Parser v3 - 4阶段分析流程 + grep模式匹配
 用法: python3 parse-sessions.py [agents_dir] [output_file] [mode]
-  mode: transcript (默认) | scan | full
+  mode: transcript (默认) | scan | full | semantic
 """
 import json, os, sys, re
 from datetime import datetime, timedelta
@@ -25,6 +25,8 @@ SIGNAL_PATTERNS = {
     "重要决策": [r"决定了",r"就用",r"切换到",r"改成",r"确认用",r"let's go with",r"switch to",r"the plan is",r"we're using",r"decision"],
     "重复模式": [r"又忘了",r"每次",r"总是",r"again",r"every time",r"keep forgetting",r"as usual",r"same as before"],
     "配置变更": [r"模型.*切换",r"改.*配置",r"更新.*版本",r"升级",r"model.*switch",r"config.*change",r"upgrade"],
+    "外部资源": [r"feishu\.cn/docx/",r"feishu\.cn/base/",r"feishu\.cn/wiki/",r"github\.com/[\w-]+/[\w-]+",r"jira.*browse/[A-Z]+-\d+",r"notion\.so",r"docs\.google\.com",r"dingtalk\.com",r"confluence/"],
+    "文件创建": [r"Successfully wrote",r"创建.*文件",r"写入.*\.md",r"写入.*\.json",r"写入.*\.py",r"写入.*\.sh",r"新文件",r"new file",r"created file",r"已创建.*文档",r"已写入.*文件"],
 }
 
 def should_skip(text):
@@ -141,6 +143,18 @@ def main():
         for f in all_findings: by_cat.setdefault(f["category"], []).append(f)
         for cat, items in by_cat.items():
             output += f"### {cat} ({len(items)} 条)\n\n" + "\n".join(f"- **[{item['agent']}]** [{item['role']}] {item['text']}" for item in items[:10]) + "\n\n"
+    elif mode == "semantic":
+        # 语义模式：输出完整对话原文，交给 auto-dream Agent 自行判断重要性
+        # 不做 grep 过滤，保留全部消息上下文，让 LLM 理解语义
+        output = f"# 🧠 GATHER — 语义分析输入（最近 24 小时，自 {cutoff_str}）\n\n"
+        output += f"**Agent 数**: {len(session_stats)} | **消息数**: {total_messages} | **用户轮次**: {total_turns}\n\n"
+        output += "**指令**：以下对话由各 Agent 的 session 提取而来。请阅读后自行判断哪些信息值得记录到 memory，包括但不限于：\n"
+        output += "- 创建了什么外部资源（飞书文档、GitHub 仓库、文件等）\n"
+        output += "- 做了哪些重要决策（即使没有明确的'决定了'措辞）\n"
+        output += "- 发现并修复了什么问题\n"
+        output += "- 调度了哪些子 Agent 做了什么任务\n"
+        output += "- 其他日后可能需要参考的信息\n\n"
+        output += "---\n\n" + "\n\n".join(all_conversations)
     elif mode == "full":
         output = f"# 📝 AutoDream 完整分析（最近 24 小时）\n\n**Agent 数**: {len(session_stats)} | **消息数**: {total_messages} | **用户轮次**: {total_turns} | **信号数**: {total_findings}\n\n"
         output += "## 📊 会话统计\n\n| Agent | 文件 | 消息 | 用户轮次 | 平均深度 | 信号数 |\n|-------|------|------|---------|---------|--------|\n"

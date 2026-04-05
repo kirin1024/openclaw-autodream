@@ -66,6 +66,40 @@ mkdir -p "$WORKSPACE_AUTO_DREAM/memory/pending-changes"
 mkdir -p "$SCRIPTS_DIR/logs"
 mkdir -p "$MEMORY_PENDING"
 mkdir -p "$SKILL_DIR"
+
+# --- 创建主 agent 的 MEMORY.md（如果不存在）---
+if [ ! -f "$WORKSPACE_MAIN/MEMORY.md" ]; then
+    cat > "$WORKSPACE_MAIN/MEMORY.md" << 'MEMEOF'
+# MEMORY.md - Long-term Memory Index
+
+> Auto-created by OpenClaw AutoDream installer
+
+## Topics
+MEMEOF
+    echo "  $WORKSPACE_MAIN/MEMORY.md (新建)"
+fi
+
+# --- 创建默认 memory 目录（如果不存在）---
+mkdir -p "$WORKSPACE_MAIN/memory"
+
+# --- 检测已有的子 Agent workspace 并初始化---
+for ws in "${OPENCLAW_DIR}"/workspace-*/; do
+    [ -d "$ws" ] || continue
+    agent_name=$(basename "$ws" | sed 's/^workspace-//')
+    mkdir -p "${ws}memory/pending-changes"
+    mkdir -p "${ws}memory/daily"
+    if [ ! -f "${ws}MEMORY.md" ]; then
+        cat > "${ws}MEMORY.md" << 'MEMEOF'
+# MEMORY.md - Memory Index (managed by AutoDream)
+
+> Auto-initialized by OpenClaw AutoDream installer
+
+## Topics
+MEMEOF
+        echo "  ${ws}MEMORY.md (新建)"
+    fi
+    echo "  ${ws}memory/pending-changes/"
+done
 echo "  $WORKSPACE_AUTO_DREAM/memory/pending-changes/"
 echo "  $SCRIPTS_DIR/logs/"
 echo "  $MEMORY_PENDING/"
@@ -205,6 +239,7 @@ cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
 ```markdown
 ## 变更 N：[简要描述]
 - **目标文件**: `memory/xxx.md`
+- **Target Workspace**: `~/.openclaw/workspace-AGENT_NAME/`（从来源 Agent 推断，附在提案末尾）
 - **类型**: create | update | append
 - **可信度**: high | medium | low
 - **来源**: Agent 名称，会话时间
@@ -216,8 +251,11 @@ cat > "$WORKSPACE_AUTO_DREAM/auto-dream-task.md" << 'TASK_EOF'
   ```
 ```
 
-规则：
-- 不创建重复条目（对比已有的 pending-changes）
+**Target Workspace 推断规则**（必须遵守）：
+- 来源是 `main session` → `Target Workspace` = `~/.openclaw/workspace/`
+- 来源是 `qiwen session` → `Target Workspace` = `~/.openclaw/workspace-qiwen/`
+- 来源是其他 Agent → `Target Workspace` = `~/.openclaw/workspace-{agent名称}/`
+- 如果信息是多个 Agent 的汇总 → `Target Workspace` = `~/.openclaw/workspace/`（汇总信息归 main）
 - 相对日期转绝对日期（"昨天" → "2026-04-03"）
 - 消除矛盾：如果新信息与旧记忆冲突，新信息优先，旧记忆标注"已被更新"
 - 所有条目必须附带来源证据
@@ -571,7 +609,7 @@ ${EXISTING_PENDING}
 # --- 触发 auto-dream Agent ---
 openclaw agent --agent auto-dream --message "$FULL_TASK" --json >> "$LOG_FILE" 2>&1
 
-# --- 拷贝结果 ---
+# --- 分发 pending-changes 到各 Agent 的 workspace ---
 CHANGES=0
 PENDING_FILE="$WORKSPACE_MAIN/memory/pending-changes/$CONTENT_DATE.md"
 if [ -f "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" ]; then
@@ -579,7 +617,65 @@ if [ -f "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" ]; then
     cp "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" "$PENDING_FILE" 2>/dev/null
     CHANGES=$(grep -c "^## 变更" "$WORKSPACE_AUTO_DREAM/memory/pending-changes/$CONTENT_DATE.md" 2>/dev/null || echo "0")
     echo "📋 待处理变更: $CHANGES 条 | file=$CONTENT_DATE.md" >> "$LOG_FILE"
+
+    # --- 按 Target Workspace 分发 ---
+    echo "📦 [multi-agent] 按 Target Workspace 分发..." >> "$LOG_FILE"
+    python3 - "$CONTENT_DATE" <<'PYDISTRIBUTE'
+import re, os, sys
+
+workspace_main = os.path.expanduser("~/.openclaw/workspace")
+workspace_auto_dream = os.path.expanduser("~/.openclaw/workspace-auto-dream")
+
+content_date = sys.argv[1]
+if not content_date:
+    exit(0)
+
+source_file = os.path.join(workspace_auto_dream, "memory", "pending-changes", f"{content_date}.md")
+if not os.path.exists(source_file):
+    exit(0)
+
+with open(source_file) as f:
+    content = f.read()
+
+# 提取每条变更的 Target Workspace
+changes = re.split(r"(?=^## \w*Change \d+|## 变更多\d+：|\*\*Change\*\*\s*\d+：)", content, flags=re.MULTILINE)
+
+targets = {}
+for block in changes:
+    match = re.search(r"[Tt]arget [Ww]orkspace[：:]*\s*\S*`?(~\/[^`\s]+)", block)
+    if match:
+        target_ws = os.path.expanduser(match.group(1).rstrip("/").strip())
+        targets.setdefault(target_ws, []).append(block)
+    else:
+        targets.setdefault(workspace_main, []).append(block)
+
+for target_ws, blocks in targets.items():
+    if target_ws == workspace_main:
+        continue  # main 已经拷贝过了
+
+    target_dir = os.path.join(target_ws, "memory", "pending-changes")
+    target_file = os.path.join(target_dir, f"{content_date}.md")
+    os.makedirs(target_dir, exist_ok=True)
+
+    if os.path.exists(target_file):
+        with open(target_file) as f:
+            existing = f.read()
+    else:
+        existing = f"# Pending Changes (from AutoDream) — {content_date}\n\n"
+
+    new_content = existing
+    for block in blocks:
+        if block.strip() and block.strip() not in existing:
+            new_content += block + "\n\n"
+
+    with open(target_file, "w") as f:
+        f.write(new_content)
+
+    agent_name = os.path.basename(target_ws).replace("workspace-", "")
+    print(f"  ✅ {agent_name}: {len(blocks)} 条变更 → pending-changes/")
+PYDISTRIBUTE
 fi
+
 if [ -f "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$CONTENT_DATE.md" ]; then
     cp "$WORKSPACE_AUTO_DREAM/memory/kairos-dream-$CONTENT_DATE.md" "$WORKSPACE_MAIN/memory/kairos-dream-$CONTENT_DATE.md" 2>/dev/null
 fi

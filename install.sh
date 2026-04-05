@@ -276,7 +276,8 @@ from pathlib import Path
 
 AGENTS_DIR = os.path.expanduser("~/.openclaw/agents")
 EXCLUDE_AGENTS = {"auto-dream"}
-MAX_LINES_PER_FILE = 20
+MAX_LINES_PER_FILE = 30
+MAX_RESET_FILES = 20
 MIN_TEXT_LENGTH = 5
 SKIP_PREFIXES = ("[cron:",)
 SKIP_KEYWORDS = (
@@ -353,10 +354,36 @@ def main():
         if not os.path.isdir(sessions_path): continue
         if agent_name in EXCLUDE_AGENTS: continue
         agent_msgs = []; agent_findings = []; agent_files = 0; total_user_turns = 0; total_chars = 0
+        # 先收集24小时内的 reset 文件，按时间排序后取最新的 MAX_RESET_FILES 个
+        reset_candidates = []
         for filename in sorted(os.listdir(sessions_path)):
-            if not filename.endswith(".jsonl"): continue
+            if ".jsonl.reset." not in filename: continue
             filepath = os.path.join(sessions_path, filename)
-            if datetime.fromtimestamp(os.path.getmtime(filepath)) < cutoff: continue
+            try:
+                ts_str = filename.split(".jsonl.reset.")[1]
+                ts_str = ts_str.replace("Z", "+00:00")
+                parts = ts_str.split("T", 1)
+                if len(parts) == 2:
+                    ts_str = parts[0] + "T" + parts[1].replace("-", ":", 2)
+                reset_dt = datetime.fromisoformat(ts_str)
+                if reset_dt.tzinfo:
+                    reset_dt = reset_dt.replace(tzinfo=None) + timedelta(hours=8)
+                if reset_dt >= cutoff:
+                    reset_candidates.append((reset_dt, filepath))
+            except (ValueError, IndexError):
+                if datetime.fromtimestamp(os.path.getmtime(filepath)) >= cutoff:
+                    reset_candidates.append((datetime.fromtimestamp(os.path.getmtime(filepath)), filepath))
+        reset_candidates.sort(reverse=True)
+        reset_paths = {fp for _, fp in reset_candidates[:MAX_RESET_FILES]}
+
+        for filename in sorted(os.listdir(sessions_path)):
+            is_reset = ".jsonl.reset." in filename
+            if not (filename.endswith(".jsonl") or is_reset): continue
+            filepath = os.path.join(sessions_path, filename)
+            if is_reset:
+                if filepath not in reset_paths: continue
+            else:
+                if datetime.fromtimestamp(os.path.getmtime(filepath)) < cutoff: continue
             msgs, user_turns, chars = extract_messages(filepath)
             if msgs:
                 agent_msgs.extend(msgs); agent_findings.extend(scan_patterns(msgs))
@@ -397,6 +424,7 @@ def main():
     print(json.dumps(stats, ensure_ascii=False), file=sys.stderr)
 
 if __name__ == "__main__": main()
+
 PARSE_EOF
 chmod +x "$SCRIPTS_DIR/parse-sessions.py"
 echo "  parse-sessions.py"

@@ -17,7 +17,7 @@
 | **累积触发** | Heartbeat 检测对话轮数，达到阈值自动触发；凌晨 3:00 也强制触发 |
 | **Dashboard 可视化** | 交互式 HTML 仪表板，5 维健康指标（新鲜度/覆盖度/连通度/效率/可达性） |
 | **install.sh 一键安装** | 借鉴 [dream-skill](https://github.com/grandamenium/dream-skill) 的 install.sh 设计，30 秒完成 |
-| **工具集严格限制** | AutoDream 只能 read/write/edit，不能执行命令、访问浏览器或发送消息 |
+| **reset 文件扫描** | 自动扫描 Session Compaction 备份（`.jsonl.reset.*`），防止重置后信息丢失；24 小时窗口 + 最多 20 个文件上限 |
 
 ## 📦 快速安装
 
@@ -170,7 +170,15 @@ open ~/.openclaw/workspace/memory/dream-dashboard.html
 - 每条提案包含**可信度标注**，辅助判断
 - **绝不记录敏感凭证**：密码、Token、API Key、SSH 私钥、公钥全文、Cookie、Session、Recovery Code、验证码、账号密保答案等，哪怕它们在对话中出现过
 
-## 🧪 验证安装
+## Session Reset 兼容
+
+OpenClaw 在 Session 上下文过大时会执行 Session Compaction，将旧会话保存为 `.jsonl.reset.{时间戳}` 文件。AutoDream 默认会扫描这些 reset 文件，防止信息丢失：
+
+- **时间窗口**：仅扫描 reset 时间戳在 24 小时内的文件
+- **数量上限**：每个 Agent 最多扫描最新的 20 个 reset 文件
+- **深度**：每个 reset 文件读取最近 30 行
+
+如果发现 AutoDream 遗漏了某些对话（比如凌晨讨论过但早上找不到），很可能是因为 Session 被 reset 了。reset 文件扫描功能会自动捕获这些备份。
 
 ```bash
 # 检查状态

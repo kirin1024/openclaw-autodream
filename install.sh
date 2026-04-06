@@ -719,7 +719,9 @@ with open(state_file, 'w') as f:
 " 2>/dev/null
 
 # --- 生成 Dashboard ---
-python3 "$SCRIPTS_DIR/generate-dashboard.py" 2>/dev/null || true
+if ! python3 "$SCRIPTS_DIR/generate-dashboard.py" >> "$LOG_FILE" 2>&1; then
+    echo "⚠️ [$(date '+%Y-%m-%d %H:%M:%S')] Dashboard 生成失败" >> "$LOG_FILE"
+fi
 
 # --- 清理 ---
 rm -f "$TRANSCRIPT_FILE" "$SCAN_FILE" "$STATS_FILE"

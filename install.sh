@@ -734,31 +734,97 @@ success "写入 trigger-auto-dream.sh"
 # --- generate-dashboard.py ---
 cat > "$SCRIPTS_DIR/generate-dashboard.py" << 'DASH_EOF'
 #!/usr/bin/env python3
-"""AutoDream Dashboard Generator"""
+"""AutoDream Dashboard Generator — v2 with multi-agent support"""
 import json, os
 from datetime import datetime
 from pathlib import Path
 
 WORKSPACE = os.path.expanduser("~/.openclaw/workspace")
+OPENCLAW_DIR = os.path.expanduser("~/.openclaw")
 DREAM_STATE_FILE = f"{WORKSPACE}/memory/dream-state.json"
 MEMORY_DIR = f"{WORKSPACE}/memory"
 OUTPUT_FILE = f"{WORKSPACE}/memory/dream-dashboard.html"
+
+# --- Multi-agent discovery ---
+def discover_agents():
+    """发现所有子 agent 的 workspace"""
+    agents = {"main": {"dir": WORKSPACE, "emoji": "🏠"}}
+    for d in sorted(Path(OPENCLAW_DIR).glob("workspace-*")):
+        if d.name == "workspace-auto-dream":
+            continue  # auto-dream 不在 dashboard 展示
+        name = d.name.replace("workspace-", "")
+        agents[name] = {"dir": str(d), "emoji": "🤖"}
+    return agents
+
+def scan_agent_memory(agent_name, agent_dir):
+    """扫描一个 agent 的 memory 状态"""
+    memory_dir = os.path.join(agent_dir, "memory")
+    memory_md = os.path.join(agent_dir, "MEMORY.md")
+    
+    # Topic files
+    topic_files = []
+    if os.path.exists(memory_dir):
+        for f in sorted(Path(memory_dir).rglob("*.md")):
+            rel = str(f.relative_to(memory_dir))
+            with open(f) as fp:
+                content = fp.read()
+            topic_files.append({
+                "name": rel,
+                "path": str(f),
+                "lines": len(content.splitlines()),
+                "words": len(content.split()),
+                "mtime": os.path.getmtime(f),
+                "preview": content[:300].replace("\n", " "),
+                "size_kb": os.path.getsize(f) / 1024
+            })
+    
+    # Pending changes
+    pending_dir = os.path.join(memory_dir, "pending-changes")
+    pending_files = []
+    total_pending = 0
+    if os.path.exists(pending_dir):
+        for pf in sorted(Path(pending_dir).glob("*.md")):
+            with open(pf) as fp:
+                content = fp.read()
+            changes = content.count("## 变更") + content.count("## Change")
+            total_pending += changes
+            pending_files.append({
+                "name": pf.name,
+                "date": pf.name.replace(".md", ""),
+                "changes": changes,
+                "preview": content[:200].replace("\n", " ")
+            })
+    
+    # MEMORY.md
+    has_index = os.path.exists(memory_md)
+    if has_index:
+        with open(memory_md) as f:
+            index_lines = len(f.readlines())
+    else:
+        index_lines = 0
+    
+    # 计算每日新增（基于 mtime）
+    today = datetime.now().date()
+    daily_new = []
+    for tf in topic_files:
+        mtime = datetime.fromtimestamp(tf["mtime"]).date()
+        if mtime == today:
+            daily_new.append(tf)
+    
+    return {
+        "topic_files": topic_files,
+        "pending_files": pending_files,
+        "total_pending": total_pending,
+        "has_index": has_index,
+        "index_lines": index_lines,
+        "daily_new": daily_new,
+        "file_count": len(topic_files)
+    }
 
 def load_dream_state():
     if os.path.exists(DREAM_STATE_FILE):
         with open(DREAM_STATE_FILE) as f: return json.load(f)
     return {}
-
-def load_memory_files():
-    files = {}
-    for f in Path(MEMORY_DIR).glob("*.md"):
-        if f.name == "dream-dashboard.html": continue
-        with open(f) as fp:
-            content = fp.read()
-            files[f.name] = {"lines": len(content.splitlines()), "words": len(content.split()), "preview": content[:200].replace("\n", " ")}
-    pending_dir = f"{MEMORY_DIR}/pending-changes"
-    pending_files = sorted(Path(pending_dir).glob("*.md")) if os.path.exists(pending_dir) else []
-    return files, pending_files
 
 def load_dream_logs():
     logs = []
@@ -768,18 +834,19 @@ def load_dream_logs():
         logs.append({"date": f.name.replace("kairos-dream-","").replace(".md",""), "content": content, "preview": content[:300].replace("\n"," ")})
     return logs
 
-def calculate_health_score(state, files):
-    scores = {"freshness":0.0,"coverage":0.0,"coherence":0.0,"efficiency":0.5,"reachability":0.3}
-    if not files: return scores, 0.0
-    recent = sum(1 for f in files.values() if f["words"] > 100)
+def calculate_health_score(agent_data):
+    """计算某个 agent 的健康度"""
+    scores = {"freshness": 0.0, "coverage": 0.0, "coherence": 0.0, "efficiency": 0.5, "reachability": 0.3}
+    files = agent_data["topic_files"]
+    if not files:
+        return scores, 0.0
+    recent = sum(1 for f in files if f["words"] > 100)
     scores["freshness"] = min(1.0, recent / max(1, len(files)))
-    scores["coverage"] = sum(1 for f in files.values() if f["words"] > 50) / max(1, len(files))
-    scores["coherence"] = sum(1 for f in files.values() if f["lines"] > 5) / max(1, len(files))
-    if "MEMORY.md" in files:
-        lines = files["MEMORY.md"]["lines"]
-        scores["efficiency"] = max(0, 1.0 - (lines - 50) / 150.0)
-    topic = [f for f in files if "/" in f or f.startswith("memory/")]
-    scores["reachability"] = 0.7 if topic else 0.3
+    scores["coverage"] = sum(1 for f in files if f["words"] > 50) / max(1, len(files))
+    scores["coherence"] = sum(1 for f in files if f["lines"] > 5) / max(1, len(files))
+    if agent_data["has_index"]:
+        scores["efficiency"] = max(0, 1.0 - (agent_data["index_lines"] - 50) / 150.0)
+    scores["reachability"] = 0.7 if files else 0.3
     health = (scores["freshness"]*0.25 + scores["coverage"]*0.25 + scores["coherence"]*0.20 + scores["efficiency"]*0.15 + scores["reachability"]*0.15) * 100
     return scores, health
 
@@ -795,13 +862,118 @@ def bar(score, color, label):
 
 def main():
     state = load_dream_state()
-    files, pending_files = load_memory_files()
+    agents = discover_agents()
     logs = load_dream_logs()
-    health_scores, health = calculate_health_score(state, files)
+    
+    # 扫描所有 agent
+    agent_data = {}
+    for name, info in agents.items():
+        agent_data[name] = scan_agent_memory(name, info["dir"])
+    
     last_dream = state.get("last_dream_time", "从未")
     total_cycles = state.get("total_dream_cycles", 0)
-    threshold = state.get("cumulative_threshold", 30)
-    min_interval = state.get("min_interval_hours", 6)
+    
+    # --- Agent 卡片 ---
+    agent_cards_html = ""
+    agent_summary_data = []  # 用于总结
+    
+    for name, info in agents.items():
+        data = agent_data[name]
+        emoji = info["emoji"]
+        scores, health = calculate_health_score(data)
+        
+        if health >= 80: hc, hl = "#10B981", "优秀"
+        elif health >= 60: hc, hl = "#F59E0B", "良好"
+        elif health >= 40: hc, hl = "#EF4444", "一般"
+        else: hc, hl = "#6B7280", "需整理"
+        
+        # 今日新增
+        daily_new_count = len(data["daily_new"])
+        daily_new_html = ""
+        if daily_new_count > 0:
+            for f in data["daily_new"]:
+                daily_new_html += f'<div class="daily-item">📄 {h(f["name"])} ({f["lines"]}行)</div>'
+        
+        # 待处理变更
+        pending_html = ""
+        if data["pending_files"]:
+            for pf in data["pending_files"]:
+                pending_html += (f'<tr onclick="t(\'p-{name}-{pf["date"]}\')" style="cursor:pointer">'
+                    f'<td>📋 {pf["date"]}</td><td><span class="badge">{pf["changes"]} 条</span></td>'
+                    f'<td><span class="toggle">▶</span> {h(pf["preview"][:100])}…</td></tr>'
+                    f'<tr id="p-{name}-{pf["date"]}" class="detail" style="display:none">'
+                    f'<td colspan="3"><pre>{h(pending_html[:2000]) if pending_html else ""}</pre></td></tr>')
+        
+        # 记忆文件列表（最近修改的前 5 个）
+        recent_files = sorted(data["topic_files"], key=lambda x: x["mtime"], reverse=True)[:5]
+        files_html = ""
+        for f in recent_files:
+            age_days = (datetime.now().timestamp() - f["mtime"]) / 86400
+            if age_days < 1:
+                age_label = "今天"
+            elif age_days < 7:
+                age_label = f"{int(age_days)}天前"
+            else:
+                age_label = f"{int(age_days)}天前"
+            size_bar = min(100, f["words"] // 10)
+            files_html += (f'<tr><td>📄 {h(f["name"])}</td><td>{f["lines"]} 行</td>'
+                f'<td>{age_label}</td>'
+                f'<td><div class="mini-bar" style="width:{size_bar}px"></div></td></tr>')
+        
+        # Pending section and files section
+        pending_section = "<div class='section-title'>📋 待处理变更</div><table><thead><tr><th>日期</th><th>条数</th><th>摘要</th></tr></thead><tbody>" + pending_html + "</tbody></table>"
+        files_section = "<div class='section-title'>📄 最近修改的记忆文件</div><table><thead><tr><th>文件</th><th>行数</th><th>时间</th><th>大小</th></tr></thead><tbody>" + files_html + "</tbody></table>"
+        
+        # 5维指标
+        fb = bar(scores["freshness"], "#10B981", "新鲜度")
+        cb = bar(scores["coverage"], "#38bdf8", "覆盖度")
+        cob = bar(scores["coherence"], "#8B5CF6", "连通度")
+        eb = bar(scores["efficiency"], "#F59E0B", "效率")
+        rb = bar(scores["reachability"], "#EC4899", "可达性")
+        
+        gauge_c = 2 * 3.14159 * 60
+        gauge_o = gauge_c * (1 - health / 100)
+        
+        agent_cards_html += f'''
+        <div class="agent-card">
+            <div class="agent-header">
+                <span class="agent-emoji">{emoji}</span>
+                <h3>{name}</h3>
+                <span class="badge health-badge" style="background:{hc}">{hl} {round(health)}分</span>
+            </div>
+            <div class="agent-stats">
+                <div class="mini-stat">
+                    <div class="mini-stat-value">{data["file_count"]}</div>
+                    <div class="mini-stat-label">记忆文件</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-value">{data["total_pending"]}</div>
+                    <div class="mini-stat-label">待处理</div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-stat-value">{daily_new_count}</div>
+                    <div class="mini-stat-label">今日新增</div>
+                </div>
+            </div>
+            {"" if not daily_new_html else f'<div class="daily-section"><div class="section-title">📅 今日新增</div>{daily_new_html}</div>'}
+            {pending_section if data["pending_files"] else ""}
+            {files_section if recent_files else "<div class='empty-state'>暂无记忆文件</div>"}
+            <div class="health-section">
+                <div class="section-title">📊 5 维健康指标</div>
+                <div class="health-grid">{fb}{cb}{cob}{eb}{rb}</div>
+            </div>
+        </div>'''
+        
+        agent_summary_data.append({
+            "name": name,
+            "emoji": emoji,
+            "file_count": data["file_count"],
+            "pending": data["total_pending"],
+            "daily_new": daily_new_count,
+            "health": round(health)
+        })
+    
+    # --- 主 Dashboard ---
     try:
         if "T" in str(last_dream):
             last_dt = datetime.fromisoformat(str(last_dream).replace("Z","+00:00"))
@@ -809,52 +981,10 @@ def main():
             hours_str = f"{hours_since:.1f} 小时前"
         else: hours_str = str(last_dream)
     except: hours_str = str(last_dream)
-    if health >= 80: hc, hl = "#10B981", "优秀"
-    elif health >= 60: hc, hl = "#F59E0B", "良好"
-    elif health >= 40: hc, hl = "#EF4444", "一般"
-    else: hc, hl = "#6B7280", "需整理"
-    gauge_c = 2 * 3.14159 * 60; gauge_o = gauge_c * (1 - health / 100)
-    pending_rows = ""; total_pending = 0
-    for pf in pending_files:
-        with open(pf) as f: content = f.read()
-        changes = content.count("## 变更") + content.count("## Change")
-        total_pending += changes
-        date = pf.name.replace("pending-changes/","").replace(".md","")
-        pending_rows += ("<tr onclick=\"t('p-"+date+"')\" style=\"cursor:pointer\">"
-            "<td>📋 "+date+"</td><td><span class=\"badge\">"+str(changes)+" 条</span></td>"
-            "<td><span class=\"toggle\">▶</span> "+h(content[:200])+"…</td></tr>"
-            "<tr id=\"p-"+date+"\" class=\"detail\" style=\"display:none\">"
-            "<td colspan=\"3\"><pre>"+h(content[:2000])+"</pre></td></tr>")
-    pending_block = ""
-    if pending_files:
-        pending_block = ("<div class=\"card\"><h3>📋 待处理变更 <span class=\"badge\">"+str(total_pending)+" 条</span></h3>"
-                        "<table><thead><tr><th>日期</th><th>条数</th><th>摘要</th></tr></thead>"
-                        "<tbody>"+pending_rows+"</tbody></table></div>")
-    log_rows = ""
-    for log in logs[-10:]:
-        date = log["date"]
-        log_rows += ("<tr onclick=\"t('l-"+date+"')\" style=\"cursor:pointer\">"
-            "<td>🌙 "+date+"</td><td>"+h(log["preview"][:80])+"…</td><td><span class=\"toggle\">▶</span></td></tr>"
-            "<tr id=\"l-"+date+"\" class=\"detail\" style=\"display:none\">"
-            "<td colspan=\"3\"><pre>"+h(log["content"][:2000])+"</pre></td></tr>")
-    log_block = ""
-    if logs:
-        log_block = ("<div class=\"card\"><h3>🌙 最近 Dream 日志</h3>"
-                     "<table><thead><tr><th>日期</th><th>摘要</th><th></th></tr></thead>"
-                     "<tbody>"+log_rows+"</tbody></table></div>")
-    file_rows = ""
-    for name, info in sorted(files.items()):
-        size_bar = min(100, info["words"] // 10)
-        file_rows += ("<tr onclick=\"t('f-"+h(name)+"')\" style=\"cursor:pointer\">"
-            "<td>📄 "+h(name)+"</td><td>"+str(info["lines"])+" 行</td><td>"+str(info["words"])+" 字</td>"
-            "<td><div class=\"mini-bar\" style=\"width:"+str(size_bar)+"px\"></div></td><td><span class=\"toggle\">▶</span></td></tr>"
-            "<tr id=\"f-"+h(name)+"\" class=\"detail\" style=\"display:none\">"
-            "<td colspan=\"5\"><pre>"+h(info["preview"])+"</pre></td></tr>")
-    fb = bar(health_scores["freshness"],"#10B981","新鲜度 Freshness")
-    cb = bar(health_scores["coverage"],"#38bdf8","覆盖度 Coverage")
-    cob = bar(health_scores["coherence"],"#8B5CF6","连通度 Coherence")
-    eb = bar(health_scores["efficiency"],"#F59E0B","效率 Efficiency")
-    rb = bar(health_scores["reachability"],"#EC4899","可达性 Reachability")
+    
+    total_files = sum(d["file_count"] for d in agent_data.values())
+    total_pending = sum(d["total_pending"] for d in agent_data.values())
+    
     html = ("<!DOCTYPE html><html lang='zh-CN'><head>"
             "<meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'>"
             "<title>🌙 AutoDream Dashboard</title>"
@@ -863,78 +993,66 @@ def main():
             "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;padding:20px}"
             "h1{color:#e2e8f0;margin-bottom:20px;font-size:1.5rem}"
             "h3{color:#e2e8f0;font-size:1rem;margin-bottom:10px}"
-            ".card{background:#1e293b;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #334155}"
+            ".card,.agent-card{background:#1e293b;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #334155}"
             ".flex{display:flex;gap:16px;flex-wrap:wrap}"
             ".stat{background:#0f172a;border-radius:8px;padding:16px;flex:1;min-width:140px}"
             ".stat-value{font-size:2rem;font-weight:700;color:#38bdf8}"
             ".stat-label{color:#64748b;font-size:.8rem;margin-top:4px}"
             ".badge{background:#38bdf8;color:#0f172a;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600}"
-            ".gauge-wrap{text-align:center;padding:20px}"
-            ".gauge{width:160px;height:160px}"
-            ".gauge-bg{fill:none;stroke:#334155;stroke-width:12}"
-            ".gauge-fill{fill:none;stroke-width:12;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 1s ease}"
-            ".gauge-text{text-anchor:middle;dominant-baseline:middle;fill:#e2e8f0;font-size:2rem;font-weight:700}"
-            ".gauge-sub{text-anchor:middle;fill:#64748b;font-size:.8rem}"
+            ".agent-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}"
+            ".agent-emoji{font-size:1.5rem}"
+            ".health-badge{margin-left:auto}"
+            ".agent-stats{display:flex;gap:12px;margin-bottom:16px}"
+            ".mini-stat{background:#0f172a;padding:10px;border-radius:8px;flex:1;text-align:center}"
+            ".mini-stat-value{font-size:1.2rem;font-weight:700;color:#38bdf8}"
+            ".mini-stat-label{font-size:.7rem;color:#64748b;margin-top:2px}"
+            ".daily-section{margin-bottom:12px}"
+            ".daily-item{background:#0f172a;padding:6px 10px;border-radius:6px;font-size:.8rem;margin-bottom:4px;color:#10B981}"
+            ".section-title{color:#64748b;font-size:.8rem;font-weight:600;margin-bottom:8px;margin-top:12px}"
+            ".empty-state{color:#64748b;font-size:.8rem;text-align:center;padding:20px}"
+            ".health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}"
+            ".health-item{background:#0f172a;padding:8px;border-radius:6px}"
+            ".health-name{color:#64748b;font-size:.7rem;margin-bottom:4px}"
+            ".health-bar-bg{height:6px;background:#334155;border-radius:3px;overflow:hidden}"
+            ".health-bar-fill{height:100%;border-radius:3px;transition:width .5s}"
+            ".health-val{color:#e2e8f0;font-size:.75rem;margin-top:2px;text-align:right}"
             "table{width:100%;border-collapse:collapse}"
-            "th{text-align:left;color:#64748b;font-size:.75rem;padding:8px;border-bottom:1px solid #334155}"
-            "td{padding:10px 8px;border-bottom:1px solid #1e293b;font-size:.85rem}"
+            "th{text-align:left;color:#64748b;font-size:.75rem;padding:6px 8px;border-bottom:1px solid #334155}"
+            "td{padding:8px;border-bottom:1px solid #1e293b;font-size:.8rem}"
             "tr:hover td{background:#334155}"
-            ".mini-bar{height:6px;background:#38bdf8;border-radius:3px}"
+            ".mini-bar{height:5px;background:#38bdf8;border-radius:3px}"
             ".toggle{color:#38bdf8;margin-right:6px}"
-            "pre{white-space:pre-wrap;word-break:break-all;font-size:.8rem;color:#94a3b8;max-height:300px;overflow-y:auto;padding:10px;border-radius:6px}"
-            ".health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:16px}"
-            ".health-item{background:#0f172a;padding:12px;border-radius:8px}"
-            ".health-name{color:#64748b;font-size:.75rem;margin-bottom:6px}"
-            ".health-bar-bg{height:8px;background:#334155;border-radius:4px;overflow:hidden}"
-            ".health-bar-fill{height:100%;border-radius:4px;transition:width .5s}"
-            ".health-val{color:#e2e8f0;font-size:.85rem;margin-top:4px;text-align:right}"
-            ".next-dream{color:#38bdf8;font-size:.85rem;margin-top:12px}"
-            ".formula{color:#64748b;font-size:.8rem;margin-top:12px}"
+            "pre{white-space:pre-wrap;word-break:break-all;font-size:.75rem;color:#94a3b8;max-height:200px;overflow-y:auto;padding:8px;border-radius:4px}"
+            ".detail td{background:#0f172a}"
+            ".health-section{margin-top:12px;border-top:1px solid #334155;padding-top:12px}"
             "</style></head><body>"
-            "<h1>🌙 AutoDream Dashboard</h1>"
+            "<h1>🌙 AutoDream Dashboard — 多 Agent 记忆管理</h1>"
             "<div class='flex'>"
             "<div class='stat'><div class='stat-value'>"+str(total_cycles)+"</div><div class='stat-label'>运行次数</div></div>"
-            "<div class='stat'><div class='stat-value'>"+str(len(files))+"</div><div class='stat-label'>Memory 文件</div></div>"
+            "<div class='stat'><div class='stat-value'>"+str(len(agents))+"</div><div class='stat-label'>Agent 数</div></div>"
+            "<div class='stat'><div class='stat-value'>"+str(total_files)+"</div><div class='stat-label'>记忆文件</div></div>"
             "<div class='stat'><div class='stat-value'>"+str(total_pending)+"</div><div class='stat-label'>待处理变更</div></div>"
-            "<div class='stat'><div class='stat-value'>"+str(len(logs))+"</div><div class='stat-label'>Dream 日志</div></div>"
+            "<div class='stat'><div class='stat-value'>"+hours_str+"</div><div class='stat-label'>上次运行</div></div>"
             "</div>"
-            "<div class='flex' style='margin-top:16px'>"
-            "<div class='card' style='flex:0 0 220px'>"
-            "<h3>🏥 Memory 健康度</h3>"
-            "<div class='gauge-wrap'>"
-            "<svg class='gauge' viewBox='0 0 160 160'>"
-            "<circle class='gauge-bg' cx='80' cy='80' r='60'/>"
-            "<circle class='gauge-fill' cx='80' cy='80' r='60' stroke='"+hc+"' "
-            "stroke-dasharray='"+str(round(gauge_c,2))+"' stroke-dashoffset='"+str(round(gauge_o,2))+"'/>"
-            "<text class='gauge-text' x='80' y='68'>"+str(round(health))+"</text>"
-            "<text class='gauge-sub' x='80' y='92'>"+hl+"</text>"
-            "</svg></div>"
-            "<div class='next-dream'>上次运行: "+hours_str+"<br>定时: 每天 03:00</div>"
-            "</div>"
-            "<div class='card' style='flex:1'>"
-            "<h3>📊 5 维健康指标</h3>"
-            "<div class='health-grid'>"+fb+cb+cob+eb+rb+"</div>"
-            "<div class='formula'>公式: (新鲜度×25% + 覆盖度×25% + 连通度×20% + 效率×15% + 可达性×15%) × 100</div>"
-            "</div></div>"
-            "<div class='card'><h3>⚙️ 触发配置</h3><table>"
-            "<tr><td style='width:200px'>累积触发阈值</td><td>"+str(threshold)+" 轮</td></tr>"
-            "<tr><td>最小触发间隔</td><td>"+str(min_interval)+" 小时</td></tr>"
-            "<tr><td>定时触发</td><td>每天 03:00</td></tr>"
-            "<tr><td>最后运行</td><td>"+h(str(last_dream))+"</td></tr>"
-            "</table></div>"
-            +pending_block+log_block+
-            "<div class='card'><h3>📄 Memory 文件</h3>"
-            "<table><thead><tr><th>文件名</th><th>行数</th><th>字数</th><th>大小</th><th></th></tr></thead>"
-            "<tbody>"+file_rows+"</tbody></table></div>"
-            "<script>"
-            "function t(id){var el=document.getElementById(id);el.style.display=el.style.display==='none'?'table-row':'none';}"
-            "setTimeout(function(){location.reload();},30000);"
-            "</script></body></html>")
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f: f.write(html)
+            "<div class='card'><h3>📊 各 Agent 概览</h3>"
+            "<table><thead><tr><th>Agent</th><th>记忆文件</th><th>待处理</th><th>今日新增</th><th>健康度</th></tr></thead><tbody>")
+    for d in agent_summary_data:
+        html += f"<tr><td>{d['emoji']} {d['name']}</td><td>{d['file_count']}</td><td>{d['pending']}</td><td>{d['daily_new']}</td><td><span class='badge' style='background:{('#10B981' if d['health']>=60 else '#F59E0B' if d['health']>=40 else '#EF4444')}'>{d['health']}分</span></td></tr>"
+    html += "</tbody></table></div>"
+    html += agent_cards_html
+    html += ("<script>"
+             "function t(id){var el=document.getElementById(id);el.style.display=el.style.display==='none'?'table-row':'none';}"
+             "setTimeout(function(){location.reload();},30000);"
+             "</script></body></html>")
+    
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write(html)
+    
     print(f"Generated: {OUTPUT_FILE}")
-    print(f"Health: {health:.0f}/100 | Files: {len(files)} | Pending: {total_pending} | Logs: {len(logs)}")
+    print(f"Agents: {len(agents)} | Files: {total_files} | Pending: {total_pending}")
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
 DASH_EOF
 chmod +x "$SCRIPTS_DIR/generate-dashboard.py"
 echo "  generate-dashboard.py"

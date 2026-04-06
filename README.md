@@ -19,7 +19,7 @@ Inspired by the [Claude Code](https://claude.com) Dream Machine. A restricted su
 | **暂存区模式** | AutoDream 只写提案到 `pending-changes/`，主 Agent 审核后才执行，避免错误写入污染记忆 |
 | **全 Agent 扫描** | 扫描所有 Agent 的 session（main、子 Agent 等），不只是主 Agent |
 | **累积触发** | Heartbeat 检测对话轮数，达到阈值自动触发；凌晨 3:00 也强制触发 |
-| **Dashboard 可视化** | 交互式 HTML 仪表板，5 维健康指标（新鲜度/覆盖度/连通度/效率/可达性） |
+| **Dashboard 可视化** | 交互式 HTML 仪表板，5 维健康指标（新鲜度/覆盖度/连通度/效率/可达性）；**支持多 Agent 视图**，每个 Agent 独立健康评分、卡片和概览表格 |
 | **install.sh 一键安装** | 借鉴 [dream-skill](https://github.com/grandamenium/dream-skill) 的 install.sh 设计，30 秒完成 |
 | **语义分析模式** | 新增 `semantic` 输出模式，输出完整对话原文给 auto-dream Agent，让 LLM 自行判断语义重要性，弥补 grep 关键词匹配的盲区；**semantic 每文件 100 行，其余模式 30 行** |
 
@@ -223,7 +223,7 @@ MIT-0
 | **Staging Area** | AutoDream only writes proposals to `pending-changes/`. The main Agent executes after your approval — no accidental memory corruption |
 | **Multi-Agent Scanning** | Scans all Agent sessions (main, sub-agents, etc.), not just the primary Agent |
 | **Accumulative Trigger** | Heartbeat monitors conversation turns; auto-triggers when threshold is reached. Also force-triggers at 3:00 AM |
-| **Dashboard Visualization** | Interactive HTML dashboard with 5 health dimensions (freshness / coverage / connectivity / efficiency / reachability) |
+| **Dashboard Visualization** | Interactive HTML dashboard with 5 health dimensions (freshness / coverage / connectivity / efficiency / reachability); **multi-Agent view** — each Agent gets its own health score, card, and summary table |
 | **One-Command Install** | Inspired by [dream-skill](https://github.com/grandamenium/dream-skill)'s install.sh — setup in 30 seconds |
 | **Semantic Analysis Mode** | New `semantic` output mode sends raw conversation transcripts to the auto-dream Agent, letting the LLM judge semantic importance — filling the blind spots of grep keyword matching. **100 lines per file for semantic mode, 30 lines for others** |
 

@@ -324,14 +324,14 @@ SKIP_KEYWORDS = (
     "<final>", "</final>",
 )
 SIGNAL_PATTERNS = {
-    "用户纠正": [r"实际上",r"不对",r"错了",r"不是这样的",r"我说的",r"actually",r"no,\s",r"wrong",r"incorrect",r"I said",r"I meant"],
-    "偏好变更": [r"以后",r"从现在开始",r"我希望",r"我喜欢",r"不要",r"I prefer",r"always use",r"never use",r"from now on",r"going forward"],
-    "重要决策": [r"决定了",r"就用",r"切换到",r"改成",r"确认用",r"let's go with",r"switch to",r"the plan is",r"we're using",r"decision"],
-    "重复模式": [r"又忘了",r"每次",r"总是",r"again",r"every time",r"keep forgetting",r"as usual",r"same as before"],
-    "配置变更": [r"模型.*切换",r"改.*配置",r"更新.*版本",r"升级",r"model.*switch",r"config.*change",r"upgrade"],
-    "外部资源": [r"feishu\.cn/docx/",r"feishu\.cn/base/",r"feishu\.cn/wiki/",r"github\.com/[\w-]+/[\w-]+",r"jira.*browse/[A-Z]+-\d+",r"notion\.so",r"docs\.google\.com",r"dingtalk\.com",r"confluence/"],
-    "文件创建": [r"Successfully wrote",r"创建.*文件",r"写入.*\.md",r"写入.*\.json",r"写入.*\.py",r"写入.*\.sh",r"新文件",r"new file",r"created file",r"已创建.*文档",r"已写入.*文件"],
-    "重要任务": [r"需要记住",r"记住.*这个",r"记住.*任务",r"记住.*内容",r"记一下",r"记住.*待办",r"记住.*事项",r"要记住",r"别忘了",r"要记得",r"提醒.*记住"],
+    "用户纠正": [r"实际上",r"不对",r"错了",r"不是这样的",r"我说的",r"actually",r"no,\s",r"wrong",r"incorrect",r"I said",r"I meant",r"you\s+(?:mean|meant|should|need to)",r"I don't (?:mean|want)",r"that's not (?:right|correct|what)",r"actually,?\s",r"correction"],
+    "偏好变更": [r"以后",r"从现在开始",r"我希望",r"我喜欢",r"不要",r"I prefer",r"always use",r"never use",r"from now on",r"going forward",r"in the future",r"I'd like",r"please (?:always|never)",r"by default"],
+    "重要决策": [r"决定了",r"就用",r"切换到",r"改成",r"确认用",r"let's go with",r"switch to",r"the plan is",r"we're using",r"decision",r"we'll go with",r"approved",r"confirmed",r"let's use",r"I decided",r"we decided"],
+    "重复模式": [r"又忘了",r"每次",r"总是",r"again",r"every time",r"keep forgetting",r"as usual",r"same as before",r"you keep",r"you (?:always|constantly|repeatedly)",r"not (?:again|another time)",r"this (?:keeps|kept) happening"],
+    "配置变更": [r"模型.*切换",r"改.*配置",r"更新.*版本",r"升级",r"model.*switch",r"config.*change",r"upgrade",r"set (?:model|config)",r"change (?:model|settings)",r"update (?:version|config|settings)",r"install (?:version|update)"],
+    "外部资源": [r"feishu\.cn/docx/",r"feishu\.cn/base/",r"feishu\.cn/wiki/",r"github\.com/[\w-]+/[\w-]+",r"jira.*browse/[A-Z]+-\d+",r"notion\.so",r"docs\.google\.com",r"dingtalk\.com",r"confluence/",r"trello\.com/",r"linear\.app/",r"clickup\.com/",r"asana\.com/",r"slack\.com/channels/"],
+    "文件创建": [r"Successfully wrote",r"创建.*文件",r"写入.*\.md",r"写入.*\.json",r"写入.*\.py",r"写入.*\.sh",r"新文件",r"new file",r"created file",r"已创建.*文档",r"已写入.*文件",r"wrote (?:to|a) file",r"saved (?:to|as)",r"generated",r"created.*in.*workspace"],
+    "重要任务": [r"需要记住",r"记住.*这个",r"记住.*任务",r"记住.*内容",r"记一下",r"记住.*待办",r"记住.*事项",r"要记住",r"别忘了",r"要记得",r"提醒.*记住",r"remember (?:this|that|to)",r"don't forget",r"remind (?:me|us)",r"take (?:a |)?note",r"note to (?:self|myself)",r"make sure (?:to|you|we)",r"important.*(?:note|task|todo)",r"save (?:this|that|it)",r"keep (?:this|track)",r"memorize",r"bookmark (?:this|that)"],
 }
 
 def should_skip(text):

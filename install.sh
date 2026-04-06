@@ -331,6 +331,7 @@ SIGNAL_PATTERNS = {
     "配置变更": [r"模型.*切换",r"改.*配置",r"更新.*版本",r"升级",r"model.*switch",r"config.*change",r"upgrade"],
     "外部资源": [r"feishu\.cn/docx/",r"feishu\.cn/base/",r"feishu\.cn/wiki/",r"github\.com/[\w-]+/[\w-]+",r"jira.*browse/[A-Z]+-\d+",r"notion\.so",r"docs\.google\.com",r"dingtalk\.com",r"confluence/"],
     "文件创建": [r"Successfully wrote",r"创建.*文件",r"写入.*\.md",r"写入.*\.json",r"写入.*\.py",r"写入.*\.sh",r"新文件",r"new file",r"created file",r"已创建.*文档",r"已写入.*文件"],
+    "重要任务": [r"需要记住",r"记住.*这个",r"记住.*任务",r"记住.*内容",r"记一下",r"记住.*待办",r"记住.*事项",r"要记住",r"别忘了",r"要记得",r"提醒.*记住"],
 }
 
 def should_skip(text):

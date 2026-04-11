@@ -6,9 +6,184 @@ Inspired by the [Claude Code](https://claude.com) Dream Machine. A restricted su
 
 > ✨ From 11 manual steps to 1 command — 30 seconds to install.
 
-**[🇺🇸 English](#-english)** | **[🇨🇳 中文](#-核心特性)**
+**[🇺🇸 English](#english)** | **[🇨🇳 中文](#中文)**
 
 ---
+
+# 🇺🇸 English
+
+## Core Features
+
+| Feature | Description |
+|---------|-------------|
+| **4-Phase Pipeline** | ORIENT → GATHER → CONSOLIDATE → PRUNE, inspired by [dream-skill](https://github.com/grandamenium/dream-skill) |
+| **Grep Pattern Matching** | 8 signal types auto-detected (user correction / preference change / important decision / repetition / config change / **external resources** / **file creation** / **important tasks**), 10x more efficient than full-text reading |
+| **Staging Area** | AutoDream only writes proposals to `pending-changes/`. The main Agent executes after your approval — no accidental memory corruption |
+| **Multi-Agent Scanning** | Scans all Agent sessions (main, sub-agents, etc.), not just the primary Agent |
+| **Accumulative Trigger** | Heartbeat monitors conversation turns; auto-triggers when threshold is reached. Also force-triggers at 3:00 AM |
+| **Dashboard Visualization** | Interactive HTML dashboard with 5 health dimensions (freshness / coverage / connectivity / efficiency / reachability); **multi-Agent view** — each Agent gets its own health score, card, and summary table |
+| **One-Command Install** | Inspired by [dream-skill](https://github.com/grandamenium/dream-skill)'s install.sh — setup in 30 seconds |
+| **Semantic Analysis Mode** | New `semantic` output mode sends raw conversation transcripts to the auto-dream Agent, letting the LLM judge semantic importance — filling the blind spots of grep keyword matching. **100 lines per file for semantic mode, 30 lines for others** |
+
+## Quick Start
+
+> install.sh is idempotent — safe to re-run.
+
+```bash
+# Clone to skills directory
+git clone https://github.com/kirin1024/openclaw-autodream ~/.openclaw/workspace/skills/openclaw-autodream
+
+# Run installer
+bash ~/.openclaw/workspace/skills/openclaw-autodream/install.sh
+
+# Restart Gateway
+openclaw gateway restart
+```
+
+install.sh automatically:
+1. Creates directory structure
+2. Writes all core files
+3. Configures `openclaw.json` (adds auto-dream Agent)
+4. Configures macOS `launchd` scheduled task (daily at 3:00 AM)
+5. Prints 2 steps that need manual confirmation
+
+**Idempotent design**: detects existing installation and skips — safe to re-run.
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Trigger A: Daily at 3:00 AM (launchd)               │
+│  Trigger B: Heartbeat detects cumulative turns ≥ 30  │
+├──────────────────────────────────────────────────────┤
+│  Phase 1: ORIENT — Read MEMORY.md + topic files      │
+│  Phase 2: GATHER — grep signals + semantic + full    │
+│     ├─ 8 signals: correction/pref/decision/          │
+│     │   repetition/config/resources/file-creation/    │
+│     │   important-tasks                               │
+│     ├─ Semantic mode: LLM judges importance (100 ln) │
+│     ├─ Other modes: 30 lines per file default        │
+│     └─ Conversation depth scoring                    │
+│  Phase 3: CONSOLIDATE — Generate proposals (staging) │
+│     ├─ Each with source evidence                     │
+│     └─ Confidence: high / medium / low               │
+│  Phase 4: PRUNE — Mark expired entries for archive   │
+├──────────────────────────────────────────────────────┤
+│  Output:                                             │
+│  ├─ pending-changes/YYYY-MM-DD.md (proposals)        │
+│  ├─ kairos-dream-YYYY-MM-DD.md (analysis report)     │
+│  ├─ dream-state.json (state tracking)                │
+│  └─ dream-dashboard.html (visualization)             │
+├──────────────────────────────────────────────────────┤
+│  On your next message:                               │
+│  Main Agent checks pending-changes → shows summary   │
+│  → You confirm → Execute → Delete pending files      │
+└──────────────────────────────────────────────────────┘
+```
+
+## Reminder Mechanism
+
+After AutoDream generates `pending-changes/*.md`, it **does not proactively message you across channels**. The reminder strategy is chosen during installation:
+
+1. **Immediate reminder in terminal** after manual trigger
+2. **macOS local notification** after daily scheduled run
+3. **Immediate terminal + notification** when pending is generated
+4. **Check on next user message** — main Agent scans pending first (Recommended)
+
+> **Option 4** is recommended. It works across all channels (Web / Telegram / Discord / Signal / Feishu) without dependency on any specific messaging platform.
+
+If you choose **4**, the installer will auto-patch AGENTS.md with pending-changes check logic, including:
+- **Session Start check**: Check pending on every new session
+- **Every Turn check + date comparison**: On every message, compare current date with last check date (auto-trigger on new day)
+- **last_pending_check_date**: Stored in dream-state.json, ensures cross-day sessions work correctly
+
+### Cross-Day Session Support
+
+AutoDream supports cross-Agent memory distribution: after scanning all Agent sessions, it automatically routes change proposals to each Agent's `memory/pending-changes/` directory based on the source. Each Agent confirms and writes to its own memory files independently.
+
+The installer auto-creates `MEMORY.md` templates for all existing sub-Agent workspaces.
+
+## Comparison with Open Source Projects
+
+### dream-skill
+
+| Feature | dream-skill | AutoDream for OpenClaw |
+|---------|------------|------------------------|
+| Trigger | Stop hook | launchd + Heartbeat accumulative |
+| Pipeline | 4 phases | ✅ 4 phases (same) |
+| Grep matching | ✅ 5 signals | ✅ (adapted, 8 types) |
+| Staging mode | ❌ Direct write | ✅ Safe |
+| Multi-Agent | ❌ Single project | ✅ All agents |
+| Cron filtering | ❌ None | ✅ |
+| Dashboard | ❌ None | ✅ |
+| Installation | git clone + bash install.sh | install.sh one-click |
+
+### openclaw-auto-dream
+
+| Feature | openclaw-auto-dream | AutoDream for OpenClaw |
+|---------|---------------------|------------------------|
+| Memory scoring | importance = base × recency × refs/8 | ✅ Fixed negative recency bug |
+| Health monitoring | ✅ 5 dimensions | ✅ (adapted) |
+| Staging mode | ❌ Direct write | ✅ Safe |
+| Multi-Agent | ❌ | ✅ |
+| Dream log | ✅ dream-log.md | ✅ kairos-dream report |
+| Installation | ClawHub one-liner | ✅ install.sh one-click |
+
+## Customization
+
+```bash
+# View trigger config
+cat ~/.openclaw/workspace/memory/dream-state.json
+
+# Change cumulative threshold (default: 30 turns)
+# Edit cumulative_threshold in dream-state.json
+
+# Change trigger time (default: 3:00 AM)
+# Edit ~/Library/LaunchAgents/com.openclaw.auto-dream.plist
+
+# Change scan scope
+# Edit EXCLUDE_AGENTS / SKIP_KEYWORDS in parse-sessions.py
+
+# View Dashboard
+open ~/.openclaw/workspace/memory/dream-dashboard.html
+```
+
+## Security Guarantees
+
+- AutoDream **can never** execute commands, browse the web, or send messages
+- AutoDream **can never** directly update topic files (staging area only)
+- AutoDream's own session **is always excluded** (prevents self-reference loops)
+- Cron/auto tasks **are always filtered** (reduces noise)
+- All changes require **main Agent review + user confirmation** before execution
+- Every proposal includes **source evidence** for verification
+- Every proposal includes **confidence rating** for judgment
+- **Never records sensitive credentials**: passwords, tokens, API keys, SSH private keys, full public keys, cookies, sessions, recovery codes, verification codes, or security answers — even if they appear in conversations
+
+## Session Reset Compatibility
+
+When OpenClaw compacts a session's context, it saves the old conversation as `.jsonl.reset.{timestamp}` files. AutoDream scans these by default to prevent information loss:
+
+- **Time window**: only scans reset files with timestamps within 24 hours
+- **Limit**: max 20 reset files per Agent
+- **Depth**: reads last 30 lines per reset file
+
+If AutoDream seems to have missed some conversations (e.g., discussed at night but not found in the morning), it's likely because the session was reset. The reset file scanning automatically captures these backups.
+
+## Related Projects
+
+- [Claude Code](https://github.com/anthropics/claude-code) — Original Dream Machine inspiration
+- [dream-skill](https://github.com/grandamenium/dream-skill) — 4-phase pipeline, grep pattern matching, install script design
+- [openclaw-auto-dream](https://github.com/LeoYeAI/openclaw-auto-dream) — 5-layer memory system, health scoring, dashboard
+- [OpenClaw](https://github.com/openclaw/openclaw) — Agent framework
+
+## License
+
+MIT-0
+
+
+---
+
+# 🇨🇳 中文
 
 ## 🇨🇳 核心特性
 
@@ -206,182 +381,6 @@ open ~/.openclaw/workspace/memory/dream-dashboard.html
 - [OpenClaw](https://github.com/openclaw/openclaw) — Agent 框架
 
 ## 📄 License
-
-MIT-0
-
----
-
-> 🌙 *Memory is a hint, not truth.*
-
----
-
-# 🇺🇸 English
-
-## Core Features
-
-| Feature | Description |
-|---------|-------------|
-| **4-Phase Pipeline** | ORIENT → GATHER → CONSOLIDATE → PRUNE, inspired by [dream-skill](https://github.com/grandamenium/dream-skill) |
-| **Grep Pattern Matching** | 8 signal types auto-detected (user correction / preference change / important decision / repetition / config change / **external resources** / **file creation** / **important tasks**), 10x more efficient than full-text reading |
-| **Staging Area** | AutoDream only writes proposals to `pending-changes/`. The main Agent executes after your approval — no accidental memory corruption |
-| **Multi-Agent Scanning** | Scans all Agent sessions (main, sub-agents, etc.), not just the primary Agent |
-| **Accumulative Trigger** | Heartbeat monitors conversation turns; auto-triggers when threshold is reached. Also force-triggers at 3:00 AM |
-| **Dashboard Visualization** | Interactive HTML dashboard with 5 health dimensions (freshness / coverage / connectivity / efficiency / reachability); **multi-Agent view** — each Agent gets its own health score, card, and summary table |
-| **One-Command Install** | Inspired by [dream-skill](https://github.com/grandamenium/dream-skill)'s install.sh — setup in 30 seconds |
-| **Semantic Analysis Mode** | New `semantic` output mode sends raw conversation transcripts to the auto-dream Agent, letting the LLM judge semantic importance — filling the blind spots of grep keyword matching. **100 lines per file for semantic mode, 30 lines for others** |
-
-## Quick Start
-
-> install.sh is idempotent — safe to re-run.
-
-```bash
-# Clone to skills directory
-git clone https://github.com/kirin1024/openclaw-autodream ~/.openclaw/workspace/skills/openclaw-autodream
-
-# Run installer
-bash ~/.openclaw/workspace/skills/openclaw-autodream/install.sh
-
-# Restart Gateway
-openclaw gateway restart
-```
-
-install.sh automatically:
-1. Creates directory structure
-2. Writes all core files
-3. Configures `openclaw.json` (adds auto-dream Agent)
-4. Configures macOS `launchd` scheduled task (daily at 3:00 AM)
-5. Prints 2 steps that need manual confirmation
-
-**Idempotent design**: detects existing installation and skips — safe to re-run.
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────┐
-│  Trigger A: Daily at 3:00 AM (launchd)               │
-│  Trigger B: Heartbeat detects cumulative turns ≥ 30  │
-├──────────────────────────────────────────────────────┤
-│  Phase 1: ORIENT — Read MEMORY.md + topic files      │
-│  Phase 2: GATHER — grep signals + semantic + full    │
-│     ├─ 8 signals: correction/pref/decision/          │
-│     │   repetition/config/resources/file-creation/    │
-│     │   important-tasks                               │
-│     ├─ Semantic mode: LLM judges importance (100 ln) │
-│     ├─ Other modes: 30 lines per file default        │
-│     └─ Conversation depth scoring                    │
-│  Phase 3: CONSOLIDATE — Generate proposals (staging) │
-│     ├─ Each with source evidence                     │
-│     └─ Confidence: high / medium / low               │
-│  Phase 4: PRUNE — Mark expired entries for archive   │
-├──────────────────────────────────────────────────────┤
-│  Output:                                             │
-│  ├─ pending-changes/YYYY-MM-DD.md (proposals)        │
-│  ├─ kairos-dream-YYYY-MM-DD.md (analysis report)     │
-│  ├─ dream-state.json (state tracking)                │
-│  └─ dream-dashboard.html (visualization)             │
-├──────────────────────────────────────────────────────┤
-│  On your next message:                               │
-│  Main Agent checks pending-changes → shows summary   │
-│  → You confirm → Execute → Delete pending files      │
-└──────────────────────────────────────────────────────┘
-```
-
-## Reminder Mechanism
-
-After AutoDream generates `pending-changes/*.md`, it **does not proactively message you across channels**. The reminder strategy is chosen during installation:
-
-1. **Immediate reminder in terminal** after manual trigger
-2. **macOS local notification** after daily scheduled run
-3. **Immediate terminal + notification** when pending is generated
-4. **Check on next user message** — main Agent scans pending first (Recommended)
-
-> **Option 4** is recommended. It works across all channels (Web / Telegram / Discord / Signal / Feishu) without dependency on any specific messaging platform.
-
-If you choose **4**, the installer will auto-patch AGENTS.md with pending-changes check logic, including:
-- **Session Start check**: Check pending on every new session
-- **Every Turn check + date comparison**: On every message, compare current date with last check date (auto-trigger on new day)
-- **last_pending_check_date**: Stored in dream-state.json, ensures cross-day sessions work correctly
-
-### Cross-Day Session Support
-
-AutoDream supports cross-Agent memory distribution: after scanning all Agent sessions, it automatically routes change proposals to each Agent's `memory/pending-changes/` directory based on the source. Each Agent confirms and writes to its own memory files independently.
-
-The installer auto-creates `MEMORY.md` templates for all existing sub-Agent workspaces.
-
-## Comparison with Open Source Projects
-
-### dream-skill
-
-| Feature | dream-skill | AutoDream for OpenClaw |
-|---------|------------|------------------------|
-| Trigger | Stop hook | launchd + Heartbeat accumulative |
-| Pipeline | 4 phases | ✅ 4 phases (same) |
-| Grep matching | ✅ 5 signals | ✅ (adapted, 8 types) |
-| Staging mode | ❌ Direct write | ✅ Safe |
-| Multi-Agent | ❌ Single project | ✅ All agents |
-| Cron filtering | ❌ None | ✅ |
-| Dashboard | ❌ None | ✅ |
-| Installation | git clone + bash install.sh | install.sh one-click |
-
-### openclaw-auto-dream
-
-| Feature | openclaw-auto-dream | AutoDream for OpenClaw |
-|---------|---------------------|------------------------|
-| Memory scoring | importance = base × recency × refs/8 | ✅ Fixed negative recency bug |
-| Health monitoring | ✅ 5 dimensions | ✅ (adapted) |
-| Staging mode | ❌ Direct write | ✅ Safe |
-| Multi-Agent | ❌ | ✅ |
-| Dream log | ✅ dream-log.md | ✅ kairos-dream report |
-| Installation | ClawHub one-liner | ✅ install.sh one-click |
-
-## Customization
-
-```bash
-# View trigger config
-cat ~/.openclaw/workspace/memory/dream-state.json
-
-# Change cumulative threshold (default: 30 turns)
-# Edit cumulative_threshold in dream-state.json
-
-# Change trigger time (default: 3:00 AM)
-# Edit ~/Library/LaunchAgents/com.openclaw.auto-dream.plist
-
-# Change scan scope
-# Edit EXCLUDE_AGENTS / SKIP_KEYWORDS in parse-sessions.py
-
-# View Dashboard
-open ~/.openclaw/workspace/memory/dream-dashboard.html
-```
-
-## Security Guarantees
-
-- AutoDream **can never** execute commands, browse the web, or send messages
-- AutoDream **can never** directly update topic files (staging area only)
-- AutoDream's own session **is always excluded** (prevents self-reference loops)
-- Cron/auto tasks **are always filtered** (reduces noise)
-- All changes require **main Agent review + user confirmation** before execution
-- Every proposal includes **source evidence** for verification
-- Every proposal includes **confidence rating** for judgment
-- **Never records sensitive credentials**: passwords, tokens, API keys, SSH private keys, full public keys, cookies, sessions, recovery codes, verification codes, or security answers — even if they appear in conversations
-
-## Session Reset Compatibility
-
-When OpenClaw compacts a session's context, it saves the old conversation as `.jsonl.reset.{timestamp}` files. AutoDream scans these by default to prevent information loss:
-
-- **Time window**: only scans reset files with timestamps within 24 hours
-- **Limit**: max 20 reset files per Agent
-- **Depth**: reads last 30 lines per reset file
-
-If AutoDream seems to have missed some conversations (e.g., discussed at night but not found in the morning), it's likely because the session was reset. The reset file scanning automatically captures these backups.
-
-## Related Projects
-
-- [Claude Code](https://github.com/anthropics/claude-code) — Original Dream Machine inspiration
-- [dream-skill](https://github.com/grandamenium/dream-skill) — 4-phase pipeline, grep pattern matching, install script design
-- [openclaw-auto-dream](https://github.com/LeoYeAI/openclaw-auto-dream) — 5-layer memory system, health scoring, dashboard
-- [OpenClaw](https://github.com/openclaw/openclaw) — Agent framework
-
-## License
 
 MIT-0
 

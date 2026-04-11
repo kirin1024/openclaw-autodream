@@ -141,25 +141,55 @@ import os
 from pathlib import Path
 path = Path(os.path.expanduser("$AGENTS_MD"))
 text = path.read_text()
-block = """
-## AutoDream 启动检查
+# 检查是否需要更新（支持旧版本升级）
+old_block = """## AutoDream 启动检查
 
-每次会话开始时，检查 `memory/pending-changes/` 目录：
-1. 列出所有 `.md` 文件
+每次会话开始时，检查 \`memory/pending-changes/\` 目录：
+1. 列出所有 \`.md\` 文件
 2. 如有内容，读取最新一个 pending 文件并向用户展示待处理变更摘要
 3. 请用户确认要执行哪些变更（确认 / 拒绝 / 稍后）
-4. 在处理 pending 之前，暂停无关任务，除非用户明确要求跳过
-"""
-if '## AutoDream 启动检查' not in text:
+4. 在处理 pending 之前，暂停无关任务，除非用户明确要求跳过"""
+
+new_block = """### AutoDream pending-changes check (Session Start & Every Turn)
+- Run \`ls memory/pending-changes/*.md 2>/dev/null\` to check
+- If pending \`.md\` files exist, read the newest one first
+- Summarize the pending changes briefly
+- Ask the user whether to confirm / reject / defer them
+- Do this **before** handling the user's actual request, unless the user is clearly asking to skip
+- If no pending files exist, skip silently — no extra tokens
+
+### Every Turn (every message, including ongoing sessions)
+Before replying to any user message:
+
+1. **AutoDream pending-changes check** (with date-based trigger):
+   - Read \`dream-state.json\` to get \`last_pending_check_date\`
+   - Compare with current date (YYYY-MM-DD format from \`date +%Y-%m-%d\`)
+   - **Trigger check if**: first check ever OR date changed (new day) OR user explicitly asks
+   - Run \`ls memory/pending-changes/*.md 2>/dev/null\` to check
+   - If pending \`.md\` files exist, read the newest one first
+   - Summarize the pending changes briefly
+   - Ask the user whether to confirm / reject / defer them
+   - Update \`last_pending_check_date\` in \`dream-state.json\` after check
+   - Do this **before** handling the user's actual request, unless the user is clearly asks to skip
+   - If no pending files exist, skip silently — no extra tokens"""
+
+# 检查是否已有新版本
+if 'Every Turn (every message' in text and 'last_pending_check_date' in text:
+    print('ALREADY_UPDATED')
+elif '## AutoDream 启动检查' in text:
+    # 旧版本，替换
+    text = text.replace(old_block, new_block)
+    path.write_text(text)
+    print('UPGRADED')
+else:
+    # 首次安装，插入
     anchor = "Don't ask permission. Just do it.\n"
     if anchor in text:
-        text = text.replace(anchor, anchor + block)
+        text = text.replace(anchor, anchor + "\n" + new_block + "\n")
         path.write_text(text)
         print('PATCHED')
     else:
         print('MISSING_ANCHOR')
-else:
-    print('EXISTS')
 PYAGENTS
 )
     if [ "$AUTO_PATCH_RESULT" = "PATCHED" ] || [ "$AUTO_PATCH_RESULT" = "EXISTS" ]; then
@@ -1062,14 +1092,24 @@ success "写入 generate-dashboard.py"
 # --- dream-state.json ---
 python3 -c "
 import json, os
+from datetime import datetime
 path = os.path.expanduser('~/.openclaw/workspace/memory/dream-state.json')
 if os.path.exists(path):
-    print('SKIP')
+    # 检查是否需要添加 last_pending_check_date 字段
+    state = json.load(open(path))
+    if 'last_pending_check_date' not in state:
+        state['last_pending_check_date'] = datetime.now().strftime('%Y-%m-%d')
+        with open(path, 'w') as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+        print('UPDATED')
+    else:
+        print('SKIP')
 else:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     state = {
         'last_dream_time': '2026-04-04T03:00:00+08:00',
         'last_dream_date': '2026-04-04',
+        'last_pending_check_date': datetime.now().strftime('%Y-%m-%d'),
         'cumulative_turns': 0,
         'cumulative_threshold': 30,
         'min_interval_hours': 6,

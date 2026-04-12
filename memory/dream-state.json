@@ -1,0 +1,13 @@
+{
+  "last_dream_time": "2026-04-12T12:00:43+08:00",
+  "last_dream_date": "2026-04-12",
+  "cumulative_turns": 0,
+  "cumulative_threshold": 30,
+  "min_interval_hours": 6,
+  "total_dream_cycles": 2,
+  "health_score": null,
+  "last_health_check": null,
+  "last_run_date": "2026-04-12",
+  "last_pending_check_date": "2026-04-11",
+  "session_size_threshold_kb": 5000
+}

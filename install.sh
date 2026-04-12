@@ -117,7 +117,7 @@ echo "  2) 每天定时触发完成后提醒（macOS 本地通知）"
 echo "  3) 一旦生成 pending，本轮立即提醒（终端 + 本地通知）"
 echo "  4) 下一次用户发消息，主 Agent 先检查 pending 再提醒（推荐）"
 echo ""
-read -r -p "请输入选项 [默认 4]: " REMINDER_CHOICE
+REMINDER_CHOICE=4  # skip prompt
 case "$REMINDER_CHOICE" in
     1) REMINDER_MODE="manual_after_run"; REMINDER_LABEL="手动触发完立即提醒" ;;
     2) REMINDER_MODE="daily_after_run"; REMINDER_LABEL="每天定时触发完成后提醒" ;;
@@ -577,6 +577,7 @@ for f in "$WORKSPACE_AUTO_DREAM/memory/pending-changes"/*.md; do
 done
 
 TASK_CONTENT=$(cat "$WORKSPACE_AUTO_DREAM/auto-dream-task.md")
+CONTINUITY_CONTENT=$(cat "$WORKSPACE_AUTO_DREAM/dream-continuity.md" 2>/dev/null || echo "(无 continuity 文件，正常启动)")
 
 FULL_TASK="${TASK_CONTENT}
 
@@ -635,10 +636,83 @@ ${EXISTING_PENDING}
 1. 用 4 阶段流程分析：ORIENT → GATHER → CONSOLIDATE → PRUNE
 2. 每条变更提案包含来源证据，标注可信度：high/medium/low
 3. 变更提案写到 memory/pending-changes/${CONTENT_DATE}.md
-4. 分析报告写到 memory/kairos-dream-${CONTENT_DATE}.md"
+4. 分析报告写到 memory/kairos-dream-${CONTENT_DATE}.md
+
+## Continuity 参考（Session Reset 恢复信息）
+
+${CONTINUITY_CONTENT}
+
+> 如果 dream-continuity.md 存在，先读取它并参考其中的结论，再开始分析。"
+
+# --- Phase X: Session 健康检查 ---
+SESSION_DIR="$HOME/.openclaw/agents/auto-dream/sessions"
+CONTINUITY_FILE="$WORKSPACE_AUTO_DREAM/dream-continuity.md"
+
+# 统计当前 session 大小（不含 .reset.* 文件）
+total_size=$(find "$SESSION_DIR" -name "*.jsonl" -not -name "*.reset.*" -exec du -k {} + 2>/dev/null | awk '{sum+=$1} END {print sum+0}')
+echo "📊 [Session Health] auto-dream session size: ${total_size}KB" >> "$LOG_FILE"
+
+if [ "$total_size" -gt 5000 ]; then
+    echo "⚠️ [Session Health] session 超过 5MB (${total_size}KB)，触发 reset" >> "$LOG_FILE"
+    
+    # 提取上次的 dream-state 关键信息写入 continuity 文件
+    python3 - "$DREAM_STATE" "$CONTINUITY_FILE" "$CONTENT_DATE" "$total_size" << 'PYEOF'
+import json, sys, os
+state_file, continuity_file, last_date, session_kb = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+
+if os.path.exists(state_file):
+    state = json.load(open(state_file))
+    total_cycles = state.get('total_dream_cycles', 0)
+    last_dream_time = state.get('last_dream_time', 'unknown')
+else:
+    total_cycles, last_dream_time = 0, 'unknown'
+
+content = f"""# Dream Continuity — Last State
+
+> ⚠️ 此文件由 trigger-auto-dream.sh 自动生成。Reset 后 auto-dream Agent 读此文件恢复关键上下文。
+
+## 上次运行信息
+- 最后成功运行: {last_dream_time}
+- 总运行次数: {total_cycles}
+- Session 大小触发 reset: {session_kb}KB
+- Reset 日期: {last_date}
+
+## 重要结论（从上次 pending-changes 提取）
+请从 memory/pending-changes/{last_date}.md 中提取 HIGH 可信度的变更结论，写入下方：
+
+暂无（如果 pending 文件为空或只有低可信度变更）
+
+## 注意事项
+- 本文件在每次 session reset 后由 trigger-auto-dream.sh 自动生成
+- auto-dream Agent 启动时应首先读取并参考此文件
+"""
+
+os.makedirs(os.path.dirname(continuity_file), exist_ok=True)
+with open(continuity_file, 'w') as f:
+    f.write(content)
+print(f"✅ continuity 文件已写入: {continuity_file}")
+PYEOF
+    
+    # 通知 gateway 压缩 session（创建 reset 标记文件）
+    reset_ts=$(date '+%Y-%m-%dT%H-%M-%S')
+    touch "$SESSION_DIR/session.reset.${reset_ts}.triggered"
+    echo "🧹 [Session Health] reset 标记已创建: session.reset.${reset_ts}.triggered" >> "$LOG_FILE"
+fi
+
+# --- 重新读取 continuity（Phase X 可能刚创建了新文件）---
+CONTINUITY_FINAL=$(cat "$WORKSPACE_AUTO_DREAM/dream-continuity.md" 2>/dev/null || echo "(无 continuity 文件)")
+
+# --- 追加 continuity 到任务消息 ---
+CONTINUITY_APPEND="## Continuity 参考（Session Reset 恢复信息）
+
+${CONTINUITY_FINAL}
+
+> 如果 dream-continuity.md 存在，先读取它并参考其中的结论，再开始分析。"
 
 # --- 触发 auto-dream Agent ---
-openclaw agent --agent auto-dream --message "$FULL_TASK" --json >> "$LOG_FILE" 2>&1
+openclaw agent --agent auto-dream --message "${FULL_TASK}
+
+${CONTINUITY_APPEND}" --json >> "$LOG_FILE" 2>&1
 
 # --- 分发 pending-changes 到各 Agent 的 workspace ---
 CHANGES=0
